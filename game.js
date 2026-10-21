@@ -88,13 +88,14 @@ const fields = [
 fields.forEach(f => f.lvl = CROPS[f.crop].lvl);
 const hedges = [{x: 0, y: 768, w: 416, h: 64}, {x: 608, y: 768, w: 416, h: 64}];
 const walls = [...hedges,
+  {x: 376, y: 226, w: 56, h: 30}, // crate
   {x: 64, y: 128, w: 192, h: 128}, // barn
   {x: 448, y: 120, w: 128, h: 70}, // stall
   {x: 446, y: 214, w: 132, h: 40}, // blue counter
   {x: 306, y: 206, w: 48, h: 40}, // windmill
   ...fields.map(f => ({x: f.x, y: f.y - 30, w: f.w, h: 14, fence: true})),
 ];
-const stallSpot = {x: 512, y: 292}, shopSpot = {x: 160, y: 290}, WINDMILL = {x: 330, y: 252};
+const crateSpot = {x: 404, y: 292}, stallSpot = {x: 512, y: 292}, shopSpot = {x: 160, y: 290}, WINDMILL = {x: 330, y: 252};
 const isPath = (x, y) => x >= 0 && y >= 0 && x < WW && y < WH && (((x === 448 || x === 512) && y >= 256) || (y === 320 && x >= 64 && x < 960));
 function pathTile(x, y) {
   const n = !isPath(x, y - TILE), s = !isPath(x, y + TILE), w = !isPath(x - TILE, y), e = !isPath(x + TILE, y);
@@ -120,7 +121,7 @@ const carried = () => Object.keys(CROPS).reduce((a, k) => a + S.inv[k], 0) + S.i
 
 function reset(mode) {
   const prog = mode === 'farm' ? loadFarm() : freshProgress();
-  S = {mode, ...prog, time: 0, left: 180, goal: 500, sellT: 0, running: true, paused: false, saveT: 0, levelQueue: []};
+  S = {mode, ...prog, time: 0, left: 180, goal: 500, sellT: 0, crateT: 0, crateCoins: 0, running: true, paused: false, saveT: 0, levelQueue: []};
   plants = [];
   fields.forEach((f, fi) => { const g = CROPS[f.crop].grid, tileCrop = g === 64;
     for (let y = f.y + (tileCrop ? 50 : g * .75); y < f.y + f.h; y += g) for (let x = f.x + g / 2; x < f.x + f.w; x += g) plants.push({x, y, f: fi, crop: f.crop, ripe: true, t: 0, max: 1}); });
@@ -203,7 +204,7 @@ function addXp(n) {
 }
 function makeOrder() {
   const types = Object.keys(CROPS).filter(k => fields.some(f => f.crop === k && fieldOpen(f)));
-  if (S.inv.apple > 0) types.push('apple'); if (S.inv.wood >= 3) types.push('wood');
+  if (S.inv.apple > 0) types.push('apple'); if (S.inv.wood >= 3) types.push('wood'); // only things we hold right now
   const pick = [types[0]]; const extra = Math.min(types.length - 1, Math.floor(Math.random() * (S.level >= 2 ? 3 : 1)));
   const pool = types.slice(1).sort(() => Math.random() - .5); for (let i = 0; i < extra; i++) pick.push(pool[i]);
   if (pick.length > 1 && Math.random() < .3) pick.shift(); // not every order needs wheat
@@ -238,7 +239,7 @@ function update(dt) {
   for (const p of plants) {
     const f = fields[p.f]; if (!fieldOpen(f)) continue;
     if (p.ripe) { if (Math.abs(p.x - player.x) < R && Math.abs(p.y - player.y) < R) {
-      if (full) { tip(`🧺 Basket full (${cap})! Sell at the 🏪 market.`); continue; }
+      if (full) { tip(`🧺 Basket full! Sell at the 🏪 stall or 📦 crate.`); continue; }
       const c = CROPS[p.crop], n = Math.min(c.yield, cap - carried()); p.ripe = false; p.t = p.max = c.grow * (.9 + Math.random() * .3);
       S.inv[p.crop] += n; full = carried() >= cap; player.harvestT = .35; addXp(c.xp * n); p.popT = .3;
       float(p.x, p.y - 20, `+${n}${n > 1 ? ' ' + c.emoji : ''}`, '#ffe066', n > 1 ? 26 : 22); burst(p.x, p.y, '#f4c542', 4, 'fx-wheat-bits'); bump(p.crop); beep(640 + Math.random() * 220, .05, 'triangle', .045); }
@@ -252,6 +253,8 @@ function update(dt) {
     if (t.hp <= 0) { t.fall = Math.min(1, t.fall + dt * 1.4);
       if (!t.gate && t.fall >= 1 && (t.regrow += dt) > 40 && Math.hypot(player.x - t.x, player.y - t.y) > 80) { t.hp = t.max; t.fall = 0; t.regrow = 0; t.pop = 1; spawnFx('fx-sparkle', t.x, t.y - 20); }
       continue; }
+    if (t.kind === 'fruit' && (t.appleT = (t.appleT || 0) + dt) > 18) { t.appleT = 0;
+      if (pickups.filter(q => q.k === 'apple' && Math.hypot(q.x - t.x, q.y - t.y) < 90).length < 3) pickups.push({k: 'apple', n: 1, x: t.x + (Math.random() * 60 - 30), y: t.y + 30 + Math.random() * 16, t: 0}); }
     if (Math.hypot(player.x - t.x, player.y - t.y) < 72) {
       if ((t.hitT -= dt) <= 0) { t.hitT = .32;
         const dmg = Math.max(1, Math.round((25 + Math.pow(Math.random(), 1.6) * 230) * U('axe')));
@@ -270,7 +273,7 @@ function update(dt) {
   // pickups
   for (const p of pickups) { p.t += dt;
     if (p.t > .5 && Math.hypot(player.x - p.x, player.y - p.y) < 44) {
-      if (p.k === 'apple' && carried() >= cap) { tip(`🧺 Basket full (${cap})! Sell at the 🏪 market.`); continue; }
+      if (p.k === 'apple' && carried() >= cap) { tip(`🧺 Basket full! Sell at the 🏪 stall or 📦 crate.`); continue; }
       p.gone = true; const k = p.k, n = p.n; addXp(3);
       fly(k, toScreen(p.x, p.y - 10), () => pillCenter(k), 0, () => { S.inv[k] += n; bump(k); });
       float(p.x, p.y - 30, `+${n} ${EMOJI[k]}`, '#fff', 22); beep(760, .08, 'triangle', .06); } }
@@ -292,16 +295,31 @@ function update(dt) {
         fly(k, toScreen(player.x, player.y - 50), () => toScreen(512, 222), 0, () => burst(512, 220, '#ffe066', 3));
         if (Object.keys(front.order).every(q => front.got[q] >= front.order[q])) payCustomer(front, true);
       } else {
-        // nothing we can hand over: customer waits patiently; after a while they change the missing items to something we can grow
+        // front customer can't take anything we hold
         front.stuck += .11;
         const missing = Object.keys(front.order).filter(q => front.got[q] < front.order[q]);
-        tip(`This customer still needs ${missing.map(q => `${EMOJI[q]}${front.order[q] - front.got[q]}`).join(' ')} — go harvest!`);
-        if (front.stuck > 8) { front.stuck = 0; const ok = Object.keys(CROPS).filter(k => fields.some(f => f.crop === k && fieldOpen(f)));
-          const swap = ok.find(k => S.inv[k] > 0) || 'wheat';
-          missing.forEach(q => { if (S.inv[q] > 0) return; const left = front.order[q] - front.got[q]; front.order[q] = front.got[q]; if (!front.order[q]) { delete front.order[q]; delete front.got[q]; }
-            front.order[swap] = (front.order[swap] || 0) + left; front.got[swap] = front.got[swap] || 0; });
-          float(front.x, front.y - 120, 'Changed my order! 🤔', '#fff', 18); }
+        const held = Object.keys(GOODS).filter(k => S.inv[k] > 0 && (k !== 'wood' || S.inv[k] >= 1));
+        const other = queue.slice(1).find(c => Object.keys(c.order).some(q => c.got[q] < c.order[q] && S.inv[q] > 0));
+        const isFull = carried() >= U('basket');
+        if (other && front.stuck > .5) { // let a customer who wants what we have step up
+          customers.splice(customers.indexOf(front), 1); customers.push(front); front.stuck = 0;
+          float(front.x, front.y - 120, 'You go first! 😊', '#fff', 18);
+        } else if (held.length && (isFull || front.stuck > 3)) swapOrder(front, missing, held);
+        else if (!held.length && front.stuck > 8) swapOrder(front, missing, [Object.keys(CROPS).find(k => fields.some(f => f.crop === k && fieldOpen(f))) || 'wheat']);
+        else tip(`This customer needs ${missing.map(q => `${EMOJI[q]}${front.order[q] - front.got[q]}`).join(' ')}` + (held.length ? ' — or use the 📦 crate!' : ' — go harvest!'));
       }
+    }
+  }
+  // shipping crate: always buys anything you hold at half price
+  if (Math.hypot(player.x - crateSpot.x, player.y - crateSpot.y) < 46) {
+    if ((S.crateT -= dt) <= 0) { S.crateT = .08;
+      const k = Object.keys(GOODS).find(k => S.inv[k] > 0);
+      if (k) { S.inv[k]--; bump(k); S.crateCoins = (S.crateCoins || 0) + GOODS[k].price * .5; addXp(0.5);
+        fly(k, toScreen(player.x, player.y - 50), () => toScreen(crateSpot.x, crateSpot.y - 40), 0);
+        if (S.crateCoins >= 1) { const c = Math.floor(S.crateCoins); S.crateCoins -= c; S.coins += c; }
+        if (Math.random() < .25) fly('coins', toScreen(crateSpot.x, crateSpot.y - 50), () => pillCenter('coins'), 0, () => bump('coins'));
+        beep(420, .04, 'sine', .03);
+      } else tip('📦 Shipping crate buys anything at ½ price');
     }
   }
   // barn upgrades
@@ -323,6 +341,12 @@ function update(dt) {
   if ((S.saveT += dt) > 3) { S.saveT = 0; saveFarm(); }
   if (S.mode === 'goal' && S.coins >= S.goal) endRound();
   if (S.mode === 'endless' && S.left <= 0) { S.left = 0; endRound(); }
+}
+function swapOrder(c, missing, held) {
+  const pickFrom = held.slice().sort((a, b) => S.inv[b] - S.inv[a]);
+  missing.forEach((q, i) => { const left = c.order[q] - c.got[q]; c.order[q] = c.got[q]; if (!c.order[q]) { delete c.order[q]; delete c.got[q]; }
+    const sw = pickFrom[i % pickFrom.length]; c.order[sw] = (c.order[sw] || 0) + left; c.got[sw] = c.got[sw] || 0; });
+  c.stuck = 0; float(c.x, c.y - 120, 'Changed my order! 🤔', '#fff', 18);
 }
 function payCustomer(c, complete = true) {
   if (!Object.keys(c.order).every(k => c.got[k] >= c.order[k])) return; // only full orders pay
@@ -367,7 +391,7 @@ function drawGround() {
   decor.forEach(([id, x, y, sz]) => onScreen(x, y) && art(id, x, y, sz, sz, {foot: 0}));
   // marker rings
   ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.setLineDash([8, 6]); ctx.lineWidth = 3;
-  [stallSpot, shopSpot].forEach(p => { ctx.beginPath(); ctx.ellipse(p.x, p.y, 46, 20, 0, 0, 7); ctx.stroke(); }); ctx.setLineDash([]);
+  [stallSpot, shopSpot, crateSpot].forEach(p => { ctx.beginPath(); ctx.ellipse(p.x, p.y, 46, 20, 0, 0, 7); ctx.stroke(); }); ctx.setLineDash([]);
 }
 function cropStage(p) { if (p.ripe) return 'ripe'; const g = 1 - p.t / p.max; return g < .25 ? 'harvested' : g < .45 ? 'seed' : g < .7 ? 'sprout' : 'growing'; }
 const STAGE_WHEAT = {seed: 'wheat-seed', sprout: 'wheat-sprout', growing: 'wheat-growing', harvested: 'wheat-stubble'};
@@ -433,6 +457,10 @@ function drawCounter() { // blue sell counter in front of the stall
   shadow(512, 258, 80); ctx.fillStyle = '#4a90e2'; rr(444, 212, 136, 48, 10); ctx.fill(); ctx.strokeStyle = '#2f6db5'; ctx.lineWidth = 4; ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.fillRect(444, 212, 136, 8); outlined('SELL', 512, 248, 20, '#fff', '#2f6db5');
 }
+function drawCrate() { const {x, y} = crateSpot, cy = y - 34;
+  shadow(x, cy + 4, 34); ctx.fillStyle = '#c98b4c'; rr(x - 30, cy - 34, 60, 38, 6); ctx.fill(); ctx.strokeStyle = '#8d5a2b'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 30, cy - 21); ctx.lineTo(x + 30, cy - 21); ctx.moveTo(x - 30, cy - 9); ctx.lineTo(x + 30, cy - 9); ctx.stroke();
+  outlined('📦 CRATE', x, cy - 44, 15); outlined('½ price', x, cy + 26, 12, '#ffe066'); }
 function drawWindmill(T) { const {x, y} = WINDMILL;
   shadow(x, y - 2, 46);
   if (art('windmill', x, y, 176, 176, {action: 'spin', t: T, foot: 0})) return;
@@ -522,7 +550,7 @@ function draw(T) {
   customers.forEach(c => list.push([c.y, () => drawCustomer(c, T)]));
   chickens.forEach(c => list.push([c.y, () => drawChicken(c)]));
   pickups.forEach(p => list.push([p.y, () => drawPickup(p, T)]));
-  list.push([256, drawBarn], [200, drawStall], [262, drawCounter], [WINDMILL.y, () => drawWindmill(T)], [player.y, () => drawPlayer(T)]);
+  list.push([256, drawBarn], [200, drawStall], [262, drawCounter], [crateSpot.y - 30, drawCrate], [WINDMILL.y, () => drawWindmill(T)], [player.y, () => drawPlayer(T)]);
   list.sort((a, b) => a[0] - b[0]).forEach(i => i[1]());
   trees.forEach(drawTreeNumber);
   fx.forEach(f => art(f.id, f.x, f.y, 64, 64, {frame: Math.floor(f.t * 10), foot: 0}));
@@ -584,8 +612,8 @@ $('luOk').onclick = () => { $('levelUp').classList.add('hidden'); S.paused = fal
 // ================= Flow =================
 let last = 0;
 function loop(ts) { const T = ts / 1000, dt = Math.min(.05, (ts - last) / 1000 || 0); last = ts;
-  if (S && S.running && !S.paused) { update(dt); }
-  if (S) { updateFlyers(dt); if (S.running) hud(); draw(T); }
+  if (S && S.running && !S.paused) { try { update(dt); } catch (e) { console.warn('update error', e); } }
+  if (S) { try { updateFlyers(dt); if (S.running) hud(); draw(T); } catch (e) { console.warn('draw error', e); } }
   requestAnimationFrame(loop); }
 function start(mode) {
   if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } ac?.resume?.();
@@ -626,5 +654,5 @@ $('quitBtn').onclick = () => endRound();
 refreshMenu(); reset('goal'); S.running = false; requestAnimationFrame(loop);
 // hooks for automated tests
 window.HHF = {cropStage: p => cropStage(p), get plants() { return plants; }, ART, CROPS, UPG, needXp, get S() { return S; }, get player() { return player; }, get trees() { return trees; }, get fields() { return fields; }, get chickens() { return chickens; },
-  get customers() { return customers; }, get pickups() { return pickups; }, stallSpot, shopSpot, fieldOpen: f => fieldOpen(f), save: saveFarm};
+  get customers() { return customers; }, get pickups() { return pickups; }, stallSpot, shopSpot, crateSpot, fieldOpen: f => fieldOpen(f), save: saveFarm};
 })();

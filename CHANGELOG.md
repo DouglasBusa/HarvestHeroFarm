@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.2 — 2026-10-20
+- Fix softlock: a full basket plus a customer who wants something you can't get no longer gets stuck.
+  - 📦 Shipping crate next to the stall always buys anything you hold at ½ price.
+  - A customer further back in line who wants what you hold steps up ("You go first!").
+  - The front customer swaps missing items to things you hold: right away if your basket is full, otherwise after 3 s (8 s if you hold nothing).
+  - Orders only include apples or wood if you hold them right now; fruit trees keep dropping apples over time.
+- A full basket just skips harvesting and shows "Sell at the stall or crate". The game loop is protected with try/catch. Cache bust v=5.
+
 ## v0.3.1 — 2026-10-20
 - Fix: carrots, corn and pumpkins now use Artie's 64px plot tiles (one plot = several plants, +3/+2 per harvest). They visibly cycle harvested → seed → sprout → growing → ripe with a pop, and only ripe plots can be harvested.
 - Fix: customers only pay (and show the heart) when every item is fully delivered. Partial deliveries are tracked per item.
