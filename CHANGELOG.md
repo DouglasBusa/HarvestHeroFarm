@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.1 — 2026-10-20
+- Fix: carrots, corn and pumpkins now use Artie's 64px plot tiles (one plot = several plants, +3/+2 per harvest). They visibly cycle harvested → seed → sprout → growing → ripe with a pop, and only ripe plots can be harvested.
+- Fix: customers only pay (and show the heart) when every item is fully delivered. Partial deliveries are tracked per item.
+  Orders only include crops from fields you can reach; missing items bounce in red; after 8 s stuck, the customer changes the missing items to something you can grow (no reward until done).
+- Queue spacing tightened so all 4 customers fit on portrait; queue bubbles are staggered. Cache bust v=4.
+
 ## v0.3 — 2026-10-20
 - My Farm mode: saved progress (level, XP, coins, crops, upgrades, opened gates) with a "New farm" reset. Goal Challenge and 3-Minute Rush start fresh.
 - Crops by level: wheat (Lv1), carrots (Lv2), corn (Lv3), pumpkins (Lv4); each has its own fields, grow time, price, icon and counter. Fruit trees drop apples.

@@ -57,10 +57,11 @@ $('soundBtn').onclick = () => { soundOn = !soundOn; localStorage.setItem('hhf-so
 
 // ================= Game data =================
 const CROPS = {
-  wheat:   {lvl: 1, grow: 6,  price: 5,  xp: 1, emoji: '🌾', grid: 32, size: 44, name: 'Wheat'},
-  carrot:  {lvl: 2, grow: 8,  price: 8,  xp: 2, emoji: '🥕', grid: 32, size: 44, name: 'Carrots'},
-  corn:    {lvl: 3, grow: 10, price: 12, xp: 3, emoji: '🌽', grid: 32, size: 46, name: 'Corn'},
-  pumpkin: {lvl: 4, grow: 14, price: 20, xp: 5, emoji: '🎃', grid: 48, size: 56, name: 'Pumpkins'},
+  // wheat: one stalk clump per 32px; other crops: Artie's 64px plot tiles (several plants each -> yield)
+  wheat:   {lvl: 1, grow: 6,  price: 5,  xp: 1, emoji: '🌾', grid: 32, size: 44, yield: 1, name: 'Wheat'},
+  carrot:  {lvl: 2, grow: 10, price: 8,  xp: 2, emoji: '🥕', grid: 64, size: 64, yield: 3, name: 'Carrots'},
+  corn:    {lvl: 3, grow: 12, price: 12, xp: 3, emoji: '🌽', grid: 64, size: 64, yield: 3, name: 'Corn'},
+  pumpkin: {lvl: 4, grow: 15, price: 20, xp: 5, emoji: '🎃', grid: 64, size: 64, yield: 2, name: 'Pumpkins'},
 };
 const GOODS = {...CROPS, apple: {price: 6, emoji: '🍎', name: 'Apples'}, wood: {price: 4, emoji: '🪵', name: 'Wood'}};
 const ICON = {coins: 'icon-coin', wheat: 'icon-wheat', carrot: 'icon-carrot', corn: 'icon-corn', pumpkin: 'icon-pumpkin', apple: 'icon-apple', wood: 'icon-wood'};
@@ -121,8 +122,8 @@ function reset(mode) {
   const prog = mode === 'farm' ? loadFarm() : freshProgress();
   S = {mode, ...prog, time: 0, left: 180, goal: 500, sellT: 0, running: true, paused: false, saveT: 0, levelQueue: []};
   plants = [];
-  fields.forEach((f, fi) => { const g = CROPS[f.crop].grid;
-    for (let y = f.y + g * .75; y < f.y + f.h; y += g) for (let x = f.x + g / 2; x < f.x + f.w; x += g) plants.push({x, y, f: fi, crop: f.crop, ripe: true, t: 0, max: 1}); });
+  fields.forEach((f, fi) => { const g = CROPS[f.crop].grid, tileCrop = g === 64;
+    for (let y = f.y + (tileCrop ? 50 : g * .75); y < f.y + f.h; y += g) for (let x = f.x + g / 2; x < f.x + f.w; x += g) plants.push({x, y, f: fi, crop: f.crop, ripe: true, t: 0, max: 1}); });
   trees = TREE_SPOTS.map(([x, y, kind, gate]) => ({x, y, kind, gate: !!gate, hp: 1000, max: 1000, shake: 0, fall: 0, hitT: 0, pop: 0, regrow: 0}));
   if (S.gatesDown) trees.filter(t => t.gate).forEach(t => { t.hp = 0; t.fall = 1; });
   customers = []; floats = []; parts = []; fx = []; flyers = []; pickups = [];
@@ -201,7 +202,7 @@ function addXp(n) {
   if (S.levelQueue.length && !S.paused) showLevelUp(S.levelQueue.shift());
 }
 function makeOrder() {
-  const types = Object.keys(CROPS).filter(k => CROPS[k].lvl <= S.level);
+  const types = Object.keys(CROPS).filter(k => fields.some(f => f.crop === k && fieldOpen(f)));
   if (S.inv.apple > 0) types.push('apple'); if (S.inv.wood >= 3) types.push('wood');
   const pick = [types[0]]; const extra = Math.min(types.length - 1, Math.floor(Math.random() * (S.level >= 2 ? 3 : 1)));
   const pool = types.slice(1).sort(() => Math.random() - .5); for (let i = 0; i < extra; i++) pick.push(pool[i]);
@@ -238,10 +239,11 @@ function update(dt) {
     const f = fields[p.f]; if (!fieldOpen(f)) continue;
     if (p.ripe) { if (Math.abs(p.x - player.x) < R && Math.abs(p.y - player.y) < R) {
       if (full) { tip(`🧺 Basket full (${cap})! Sell at the 🏪 market.`); continue; }
-      const c = CROPS[p.crop]; p.ripe = false; p.t = p.max = c.grow * (.9 + Math.random() * .3);
-      S.inv[p.crop]++; full = carried() >= cap; player.harvestT = .35; addXp(c.xp);
-      float(p.x, p.y - 20, '+1', '#ffe066', 22); burst(p.x, p.y, '#f4c542', 4, 'fx-wheat-bits'); bump(p.crop); beep(640 + Math.random() * 220, .05, 'triangle', .045); }
-    } else if ((p.t -= dt) <= 0) p.ripe = true;
+      const c = CROPS[p.crop], n = Math.min(c.yield, cap - carried()); p.ripe = false; p.t = p.max = c.grow * (.9 + Math.random() * .3);
+      S.inv[p.crop] += n; full = carried() >= cap; player.harvestT = .35; addXp(c.xp * n); p.popT = .3;
+      float(p.x, p.y - 20, `+${n}${n > 1 ? ' ' + c.emoji : ''}`, '#ffe066', n > 1 ? 26 : 22); burst(p.x, p.y, '#f4c542', 4, 'fx-wheat-bits'); bump(p.crop); beep(640 + Math.random() * 220, .05, 'triangle', .045); }
+    } else if ((p.t -= dt) <= 0) { p.ripe = true; p.popT = .3; }
+    if (p.popT > 0) p.popT -= dt;
   }
   // chop
   player.chop = Math.max(0, player.chop - dt);
@@ -277,12 +279,12 @@ function update(dt) {
   // customers & selling
   let queue = customers.filter(c => !c.leaving);
   while (queue.length < 4) { const c = newCustomer(); c.x = 1090 + queue.length * 70; customers.push(c); queue.push(c); }
-  queue.forEach((c, i) => { c.slot = i; const tx = 606 + i * 60; c.x += Math.sign(tx - c.x) * Math.min(Math.abs(tx - c.x), 170 * dt); });
+  queue.forEach((c, i) => { c.slot = i; const tx = 600 + i * 50; c.x += Math.sign(tx - c.x) * Math.min(Math.abs(tx - c.x), 170 * dt); });
   customers.forEach(c => { if (c.leaving) { c.leaving += dt; if (c.leaving > .7) c.x -= 190 * dt; } });
   customers = customers.filter(c => c.x > -90);
   const front = queue[0];
   const atStall = Math.hypot(player.x - stallSpot.x, player.y - stallSpot.y) < 62;
-  if (atStall && front && Math.abs(front.x - 606) < 3) {
+  if (atStall && front && Math.abs(front.x - 600) < 3) {
     if ((S.sellT -= dt) <= 0) {
       S.sellT = .11 / (1 + S.upg.stall * .3);
       const k = Object.keys(front.order).find(k => front.got[k] < front.order[k] && S.inv[k] > 0);
@@ -290,10 +292,15 @@ function update(dt) {
         fly(k, toScreen(player.x, player.y - 50), () => toScreen(512, 222), 0, () => burst(512, 220, '#ffe066', 3));
         if (Object.keys(front.order).every(q => front.got[q] >= front.order[q])) payCustomer(front, true);
       } else {
-        front.stuck += .11; const got = Object.values(front.got).reduce((a, b) => a + b, 0);
-        const want = Object.keys(front.order).filter(q => front.got[q] < front.order[q]).map(q => `${EMOJI[q]}${front.order[q] - front.got[q]}`).join(' ');
-        if (got > 0 && front.stuck > 1.2) payCustomer(front, false);
-        else if (got === 0) { tip(`This customer wants ${want} — go harvest!`); if (front.stuck > 6) { front.leaving = .01; float(front.x, front.y - 90, 'Maybe later! 👋', '#fff', 20); } }
+        // nothing we can hand over: customer waits patiently; after a while they change the missing items to something we can grow
+        front.stuck += .11;
+        const missing = Object.keys(front.order).filter(q => front.got[q] < front.order[q]);
+        tip(`This customer still needs ${missing.map(q => `${EMOJI[q]}${front.order[q] - front.got[q]}`).join(' ')} — go harvest!`);
+        if (front.stuck > 8) { front.stuck = 0; const ok = Object.keys(CROPS).filter(k => fields.some(f => f.crop === k && fieldOpen(f)));
+          const swap = ok.find(k => S.inv[k] > 0) || 'wheat';
+          missing.forEach(q => { if (S.inv[q] > 0) return; const left = front.order[q] - front.got[q]; front.order[q] = front.got[q]; if (!front.order[q]) { delete front.order[q]; delete front.got[q]; }
+            front.order[swap] = (front.order[swap] || 0) + left; front.got[swap] = front.got[swap] || 0; });
+          float(front.x, front.y - 120, 'Changed my order! 🤔', '#fff', 18); }
       }
     }
   }
@@ -317,7 +324,8 @@ function update(dt) {
   if (S.mode === 'goal' && S.coins >= S.goal) endRound();
   if (S.mode === 'endless' && S.left <= 0) { S.left = 0; endRound(); }
 }
-function payCustomer(c, complete) {
+function payCustomer(c, complete = true) {
+  if (!Object.keys(c.order).every(k => c.got[k] >= c.order[k])) return; // only full orders pay
   let base = 0; for (const k in c.got) base += c.got[k] * GOODS[k].price;
   const pay = Math.round(base * (1 + U('stall')) + (complete ? 3 + S.level : 0));
   c.leaving = .01; S.coins += pay; addXp(complete ? 5 : 2); player.cheerT = .8; camShake = .12;
@@ -361,12 +369,12 @@ function drawGround() {
   ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.setLineDash([8, 6]); ctx.lineWidth = 3;
   [stallSpot, shopSpot].forEach(p => { ctx.beginPath(); ctx.ellipse(p.x, p.y, 46, 20, 0, 0, 7); ctx.stroke(); }); ctx.setLineDash([]);
 }
+function cropStage(p) { if (p.ripe) return 'ripe'; const g = 1 - p.t / p.max; return g < .25 ? 'harvested' : g < .45 ? 'seed' : g < .7 ? 'sprout' : 'growing'; }
 const STAGE_WHEAT = {seed: 'wheat-seed', sprout: 'wheat-sprout', growing: 'wheat-growing', harvested: 'wheat-stubble'};
 function drawCrop(p, T) {
   const f = fields[p.f]; if (!fieldOpen(f) || !onScreen(p.x, p.y)) return;
-  const c = CROPS[p.crop], sz = c.size, y = p.y + 14;
-  let stage = 'ripe';
-  if (!p.ripe) { const g = 1 - p.t / p.max; stage = g < .2 ? 'harvested' : g < .4 ? 'seed' : g < .7 ? 'sprout' : 'growing'; }
+  const c = CROPS[p.crop], pop = p.popT > 0 ? 1 + p.popT * .5 : 1, sz = c.size * pop, y = p.y + 14;
+  const stage = cropStage(p);
   if (p.crop === 'wheat') { if (stage === 'ripe' ? (art('wheat-ripe-sway', p.x, y, sz, sz, {t: T + p.x * .013, foot: 0}) || art('wheat-ripe', p.x, y, sz, sz, {foot: 0})) : art(STAGE_WHEAT[stage], p.x, y, sz, sz, {foot: 0})) return; }
   else if (art(`crop-${p.crop}-${stage}`, p.x, y, sz, sz, {foot: 0})) return;
   // canvas fallback
@@ -458,7 +466,7 @@ function drawPickup(p, T) { const bob = Math.sin(T * 5 + p.x) * 3;
 const shirt = ['#42a5f5', '#ab47bc', '#ff7043', '#26a69a'], hair = ['#5d4037', '#212121', '#ffb300', '#8d4925'];
 function drawCustomer(c, T) { const x = c.x, y = c.y, id = 'customer-' + (c.kind + 1);
   shadow(x, y + 2, 16);
-  const settled = !c.leaving && Math.abs(c.x - (606 + c.slot * 60)) < 4;
+  const settled = !c.leaving && Math.abs(c.x - (600 + c.slot * 50)) < 4;
   const act = c.leaving ? (c.leaving < .7 ? 'happy' : 'walk-left') : settled ? 'waiting' : 'walk-left';
   if (!art(id, x, y, 84, 84, {t: T, action: act})) { const b = settled ? 0 : Math.abs(Math.sin(T * 8 + c.x)) * 3;
     ctx.fillStyle = shirt[c.kind]; rr(x - 13, y - 38 - b, 26, 32, 8); ctx.fill();
@@ -468,11 +476,12 @@ function drawCustomer(c, T) { const x = c.x, y = c.y, id = 'customer-' + (c.kind
   if (c.leaving) { ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('💖', x, y - 84 - c.leaving * 20); return; }
   if (!settled) return;
   const items = Object.keys(c.order).filter(k => c.got[k] < c.order[k]); if (!items.length) return;
-  const w = items.length * 46 + 10, bx = x - w / 2, by = y - 112 - (c.slot === 0 ? 0 : 0);
+  const w = items.length * 46 + 10, bx = x - w / 2, by = y - 112 - (c.slot % 2) * 32;
   ctx.fillStyle = '#fff'; rr(bx, by, w, 30, 12); ctx.fill(); ctx.strokeStyle = c.slot === 0 ? '#4a90e2' : '#d9a066'; ctx.lineWidth = c.slot === 0 ? 3 : 2; ctx.stroke();
-  items.forEach((k, i) => { const ix = bx + 8 + i * 46; const ic = iconFor(k);
+  items.forEach((k, i) => { const miss = S.inv[k] <= 0 && c.slot === 0, bo = miss ? -Math.abs(Math.sin(T * 6)) * 5 : 0; const ix = bx + 8 + i * 46; const ic = iconFor(k);
+    if (miss) { ctx.fillStyle = 'rgba(255,90,90,.25)'; rr(ix - 3, by + 2, 44, 26, 8); ctx.fill(); } ctx.save(); ctx.translate(0, bo);
     if (!(ic && art(ic, ix + 10, by + 26, 22, 22, {foot: 0}))) { ctx.font = '17px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(EMOJI[k], ix + 10, by + 22); }
-    ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(c.order[k] - c.got[k], ix + 23, by + 21); });
+    ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(c.order[k] - c.got[k], ix + 23, by + 21); ctx.restore(); });
 }
 function drawPlayer(T) { const {x, y, dir} = player, mv = player.moving;
   shadow(x, y + 2, 20);
@@ -616,6 +625,6 @@ $('menuBtn').onclick = () => { $('endScreen').classList.add('hidden'); $('startS
 $('quitBtn').onclick = () => endRound();
 refreshMenu(); reset('goal'); S.running = false; requestAnimationFrame(loop);
 // hooks for automated tests
-window.HHF = {ART, CROPS, UPG, needXp, get S() { return S; }, get player() { return player; }, get trees() { return trees; }, get fields() { return fields; }, get chickens() { return chickens; },
+window.HHF = {cropStage: p => cropStage(p), get plants() { return plants; }, ART, CROPS, UPG, needXp, get S() { return S; }, get player() { return player; }, get trees() { return trees; }, get fields() { return fields; }, get chickens() { return chickens; },
   get customers() { return customers; }, get pickups() { return pickups; }, stallSpot, shopSpot, fieldOpen: f => fieldOpen(f), save: saveFarm};
 })();
