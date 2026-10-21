@@ -1159,6 +1159,402 @@
      "fps": 10
     }
    ]
+  },
+  {
+   "id": "farmer-blue",
+   "file": "characters/png/farmer-blue.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 1536,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "idle",
+     "row": 0,
+     "frames": 4,
+     "fps": 5
+    },
+    {
+     "action": "walk-down",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-up",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 3,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 4,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "harvest",
+     "row": 5,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "chop",
+     "row": 6,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "cheer",
+     "row": 7,
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "action": "carry-down",
+     "row": 8,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-up",
+     "row": 9,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-left",
+     "row": 10,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-right",
+     "row": 11,
+     "frames": 6,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "farmer-blue-idle",
+   "file": "characters/png/farmer-blue-idle.png",
+   "svg": "characters/svg/farmer-blue-idle.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "windmill-base",
+   "file": "props/png/windmill-base.png",
+   "svg": "props/svg/windmill-base.svg",
+   "type": "object",
+   "width": 192,
+   "height": 192
+  },
+  {
+   "id": "windmill-blades",
+   "file": "props/png/windmill-blades.png",
+   "svg": "props/svg/windmill-blades.svg",
+   "type": "object",
+   "width": 144,
+   "height": 144,
+   "pivotX": 72,
+   "pivotY": 72,
+   "note": "rotate around (pivotX,pivotY); place pivot at windmill-base (96,64)"
+  },
+  {
+   "id": "windmill",
+   "file": "props/png/windmill.png",
+   "type": "spritesheet",
+   "width": 1536,
+   "height": 192,
+   "frameWidth": 192,
+   "frameHeight": 192,
+   "rows": [
+    {
+     "action": "spin",
+     "row": 0,
+     "frames": 8,
+     "fps": 12
+    }
+   ],
+   "pivotX": 96,
+   "pivotY": 64,
+   "anchorX": 96,
+   "anchorY": 180,
+   "note": "spin loops seamlessly (4-fold blades, 11.25deg/frame); blades pivot at (96,64)"
+  },
+  {
+   "id": "chicken",
+   "file": "characters/png/chicken.png",
+   "type": "spritesheet",
+   "width": 384,
+   "height": 192,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "idle",
+     "row": 0,
+     "frames": 4,
+     "fps": 4
+    },
+    {
+     "action": "walk",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "peck",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    }
+   ],
+   "file2x": "characters/png/chicken@2x.png",
+   "note": "faces left; mirror (scaleX=-1) for right"
+  },
+  {
+   "id": "market-counter-blue",
+   "file": "market/png/market-counter-blue.png",
+   "svg": "market/svg/market-counter-blue.svg",
+   "type": "object",
+   "width": 160,
+   "height": 160
+  },
+  {
+   "id": "crop-carrot-seed",
+   "file": "crops/png/crop-carrot-seed.png",
+   "svg": "crops/svg/crop-carrot-seed.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-carrot-seed@2x.png"
+  },
+  {
+   "id": "crop-carrot-sprout",
+   "file": "crops/png/crop-carrot-sprout.png",
+   "svg": "crops/svg/crop-carrot-sprout.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-carrot-sprout@2x.png"
+  },
+  {
+   "id": "crop-carrot-growing",
+   "file": "crops/png/crop-carrot-growing.png",
+   "svg": "crops/svg/crop-carrot-growing.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-carrot-growing@2x.png"
+  },
+  {
+   "id": "crop-carrot-ripe",
+   "file": "crops/png/crop-carrot-ripe.png",
+   "svg": "crops/svg/crop-carrot-ripe.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-carrot-ripe@2x.png"
+  },
+  {
+   "id": "crop-carrot-harvested",
+   "file": "crops/png/crop-carrot-harvested.png",
+   "svg": "crops/svg/crop-carrot-harvested.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-carrot-harvested@2x.png"
+  },
+  {
+   "id": "crop-corn-seed",
+   "file": "crops/png/crop-corn-seed.png",
+   "svg": "crops/svg/crop-corn-seed.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-corn-seed@2x.png"
+  },
+  {
+   "id": "crop-corn-sprout",
+   "file": "crops/png/crop-corn-sprout.png",
+   "svg": "crops/svg/crop-corn-sprout.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-corn-sprout@2x.png"
+  },
+  {
+   "id": "crop-corn-growing",
+   "file": "crops/png/crop-corn-growing.png",
+   "svg": "crops/svg/crop-corn-growing.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-corn-growing@2x.png"
+  },
+  {
+   "id": "crop-corn-ripe",
+   "file": "crops/png/crop-corn-ripe.png",
+   "svg": "crops/svg/crop-corn-ripe.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-corn-ripe@2x.png"
+  },
+  {
+   "id": "crop-corn-harvested",
+   "file": "crops/png/crop-corn-harvested.png",
+   "svg": "crops/svg/crop-corn-harvested.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-corn-harvested@2x.png"
+  },
+  {
+   "id": "crop-pumpkin-seed",
+   "file": "crops/png/crop-pumpkin-seed.png",
+   "svg": "crops/svg/crop-pumpkin-seed.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-pumpkin-seed@2x.png"
+  },
+  {
+   "id": "crop-pumpkin-sprout",
+   "file": "crops/png/crop-pumpkin-sprout.png",
+   "svg": "crops/svg/crop-pumpkin-sprout.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-pumpkin-sprout@2x.png"
+  },
+  {
+   "id": "crop-pumpkin-growing",
+   "file": "crops/png/crop-pumpkin-growing.png",
+   "svg": "crops/svg/crop-pumpkin-growing.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-pumpkin-growing@2x.png"
+  },
+  {
+   "id": "crop-pumpkin-ripe",
+   "file": "crops/png/crop-pumpkin-ripe.png",
+   "svg": "crops/svg/crop-pumpkin-ripe.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-pumpkin-ripe@2x.png"
+  },
+  {
+   "id": "crop-pumpkin-harvested",
+   "file": "crops/png/crop-pumpkin-harvested.png",
+   "svg": "crops/svg/crop-pumpkin-harvested.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/crop-pumpkin-harvested@2x.png"
+  },
+  {
+   "id": "icon-carrot",
+   "file": "ui/png/icon-carrot.png",
+   "svg": "ui/svg/icon-carrot.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-corn",
+   "file": "ui/png/icon-corn.png",
+   "svg": "ui/svg/icon-corn.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-pumpkin",
+   "file": "ui/png/icon-pumpkin.png",
+   "svg": "ui/svg/icon-pumpkin.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-wood",
+   "file": "ui/png/icon-wood.png",
+   "svg": "ui/svg/icon-wood.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "upgrade-sickle",
+   "file": "ui/png/upgrade-sickle.png",
+   "svg": "ui/svg/upgrade-sickle.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "upgrade-axe",
+   "file": "ui/png/upgrade-axe.png",
+   "svg": "ui/svg/upgrade-axe.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "upgrade-boots",
+   "file": "ui/png/upgrade-boots.png",
+   "svg": "ui/svg/upgrade-boots.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "upgrade-basket",
+   "file": "ui/png/upgrade-basket.png",
+   "svg": "ui/svg/upgrade-basket.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "upgrade-stall",
+   "file": "ui/png/upgrade-stall.png",
+   "svg": "ui/svg/upgrade-stall.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "gate-locked",
+   "file": "props/png/gate-locked.png",
+   "svg": "props/svg/gate-locked.svg",
+   "type": "object",
+   "width": 128,
+   "height": 64,
+   "file2x": "props/png/gate-locked@2x.png"
+  },
+  {
+   "id": "gate-open",
+   "file": "props/png/gate-open.png",
+   "svg": "props/svg/gate-open.svg",
+   "type": "object",
+   "width": 128,
+   "height": 64,
+   "file2x": "props/png/gate-open@2x.png"
   }
  ]
 }

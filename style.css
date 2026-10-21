@@ -2,27 +2,49 @@
 html,body{margin:0;height:100%;overflow:hidden;background:#7bc950;font-family:"Trebuchet MS",system-ui,sans-serif;touch-action:none;overscroll-behavior:none}
 canvas{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block;touch-action:none}
 .hidden{display:none!important}
-#hud{position:fixed;top:calc(8px + env(safe-area-inset-top));left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none;z-index:5}
-.pill{background:rgba(255,255,255,.92);border:3px solid #6b4423;border-radius:20px;padding:4px 12px;font-size:20px;font-weight:bold;color:#4a2f14;box-shadow:0 3px 0 #6b4423}
+#hud{position:fixed;top:calc(8px + env(safe-area-inset-top));left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:5}
+#hudLeft{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;gap:5px}
+.pill{background:rgba(255,255,255,.94);border:3px solid #6b4423;border-radius:20px;padding:3px 10px;font-size:18px;font-weight:bold;color:#4a2f14;box-shadow:0 3px 0 #6b4423;white-space:nowrap}
 .btn{pointer-events:auto;cursor:pointer;font-family:inherit}
-#soundBtn{margin-left:auto}
-.pop{animation:pop .25s}
-@keyframes pop{50%{transform:scale(1.25)}}
-#goalBar{position:fixed;top:calc(56px + env(safe-area-inset-top));left:8px;right:8px;max-width:420px;height:20px;background:#fff8;border:3px solid #6b4423;border-radius:12px;overflow:hidden;z-index:5;pointer-events:none}
+#lvlPill{display:flex;align-items:center;gap:8px;background:#fff4dc}
+#xpBar{width:90px;height:12px;border-radius:8px;background:#e0cfa8;overflow:hidden;border:2px solid #6b4423}
+#xpFill{height:100%;width:0;background:linear-gradient(#8be36a,#3fb13a);transition:width .25s}
+#res{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+#res .pill{min-width:76px;text-align:right;display:flex;align-items:center;justify-content:space-between;gap:6px;background:linear-gradient(#fff,#ffeec2)}
+#res .pill.coin{background:linear-gradient(#fff6c8,#ffd54f)}
+#res .pill.full{background:#ffcdd2}
+.icon{width:24px;height:24px}
+.pop{animation:pop .3s}
+@keyframes pop{40%{transform:scale(1.3)}}
+#goalBar{position:relative;width:200px;height:18px;background:#fff8;border:3px solid #6b4423;border-radius:12px;overflow:hidden}
 #goalFill{height:100%;width:0;background:linear-gradient(#ffe066,#f4b400);transition:width .2s}
-#goalText{position:absolute;inset:0;text-align:center;font-size:13px;font-weight:bold;color:#4a2f14;line-height:14px}
-#hint{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:5;pointer-events:none;color:#fff;font-size:28px;font-weight:900;text-shadow:0 3px 0 #0007,0 0 8px #000a;text-align:center}
+#goalText{position:absolute;inset:0;text-align:center;font-size:12px;font-weight:bold;color:#4a2f14;line-height:12px}
+#tip{position:fixed;left:50%;bottom:calc(18% + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff4dc;border:3px solid #6b4423;border-radius:16px;padding:8px 14px;font-weight:bold;color:#4a2f14;z-index:6;pointer-events:none;font-size:17px;text-align:center;max-width:90vw}
+#hint{position:fixed;left:50%;bottom:28%;transform:translateX(-50%);z-index:5;pointer-events:none;color:#fff;font-size:28px;font-weight:900;text-shadow:0 3px 0 #0007,0 0 8px #000a;text-align:center}
 .hand{font-size:56px;animation:drag 1.6s ease-in-out infinite}
 @keyframes drag{0%,100%{transform:translateX(-50px)}50%{transform:translateX(50px)}}
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(40,90,30,.55);z-index:10;padding:16px}
-.card{background:#fff8e1;border:5px solid #6b4423;border-radius:24px;padding:18px 20px;max-width:420px;width:100%;text-align:center;color:#4a2f14;box-shadow:0 8px 0 #6b4423}
-h1{margin:4px 0 8px;font-size:30px;color:#d35400}
-.big{display:block;width:100%;margin:10px 0;padding:12px;font:bold 22px inherit;font-family:inherit;border:none;border-radius:16px;background:#ff9f1c;color:#fff;box-shadow:0 5px 0 #c06b00;cursor:pointer}
+.card{background:#fff8e1;border:5px solid #6b4423;border-radius:24px;padding:16px 18px;max-width:420px;width:100%;text-align:center;color:#4a2f14;box-shadow:0 8px 0 #6b4423;max-height:92vh;overflow:auto;position:relative;z-index:2}
+.card.wide{max-width:480px}
+h1{margin:4px 0 8px;font-size:28px;color:#d35400}
+.big{display:block;width:100%;margin:9px 0;padding:11px;font-family:inherit;font-weight:bold;font-size:21px;border:none;border-radius:16px;background:#ff9f1c;color:#fff;box-shadow:0 5px 0 #c06b00;cursor:pointer}
 .big.alt{background:#2ec4b6;box-shadow:0 5px 0 #1a8a80}
-.big small{display:block;font-size:14px;font-weight:normal}
+.big.alt2{background:#8e6cdf;box-shadow:0 5px 0 #5e43a8}
+.big small{display:block;font-size:13px;font-weight:normal}
 .big:active{transform:translateY(3px);box-shadow:0 2px 0 #0004}
+.small{margin-top:6px;background:none;border:2px dashed #b08860;border-radius:12px;padding:6px 12px;font-family:inherit;font-weight:bold;font-size:14px;color:#8a5a2b;cursor:pointer}
 footer{margin-top:14px;color:#fff;font-weight:bold;text-shadow:0 2px 3px #0008;text-align:center;font-size:14px}
 #stars{font-size:46px;letter-spacing:6px}
-.best{font-size:14px}
-@media (max-width:480px){.pill{font-size:16px;padding:3px 8px}#hud{flex-wrap:nowrap;gap:4px}#goalBar{top:calc(48px + env(safe-area-inset-top))}}
-.icon{width:24px;height:24px;vertical-align:-5px;margin-right:2px}
+.upg{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid #e0c08a;border-radius:16px;padding:8px;margin:7px 0;text-align:left}
+.upg .ic{font-size:34px}
+.upg .info{flex:1}
+.upg .nm{font-weight:bold;font-size:17px}
+.upg .ef{font-size:13px;color:#7a5a3a}
+.dots{color:#f4b400;letter-spacing:2px}
+.upg button{font-family:inherit;font-weight:bold;font-size:16px;border:none;border-radius:12px;padding:9px 10px;background:#3fb13a;color:#fff;box-shadow:0 4px 0 #2a7d27;cursor:pointer;min-width:86px}
+.upg button:disabled{background:#c9c0b0;box-shadow:0 4px 0 #9a9080;cursor:default}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+#confetti i{position:absolute;top:-20px;width:10px;height:16px;border-radius:3px;animation:fall 2.2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (max-width:480px){.pill{font-size:15px;padding:2px 8px}#xpBar{width:64px}#res .pill{min-width:66px}.icon{width:20px;height:20px}#goalBar{width:150px}}

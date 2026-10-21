@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3 — 2026-10-20
+- My Farm mode: saved progress (level, XP, coins, crops, upgrades, opened gates) with a "New farm" reset. Goal Challenge and 3-Minute Rush start fresh.
+- Crops by level: wheat (Lv1), carrots (Lv2), corn (Lv3), pumpkins (Lv4); each has its own fields, grow time, price, icon and counter. Fruit trees drop apples.
+- XP + levels with an XP bar, a level-up popup and confetti. Level fields have locked gates with "Level N" signs and a gentle bump + tip.
+- Upgrades shop (walk into the barn ring or tap 🛠): Sickle, Axe, Boots, Basket (adds a carry limit), Stall.
+- Big outlined tree countdown that drops in uneven chunks with a pop on every hit; felled trees drop log piles (wood).
+- Resource badges at the top right with bump animations; blue sell counter; customers order mixes; crops fly to the counter and coins fly to the badge.
+- Artie v1.1 art: blue-overalls farmer, windmill, chickens (wander, peck, run from the farmer), crops, gates, icons. More fences.
+- Fix: the farmer's legs are no longer hidden in the crops. Cache bust v=3.
+
 ## v0.2 — 2026-10-20
 - Artie's art batch v1: farmer with 4-direction walk/carry, harvest, chop and cheer animations; 4 customers (walk, waiting, happy);
   round/pine/fruit trees with shake, falling and stump; wheat growth stages for regrowth; autotiled dirt paths; plowed soil; fence + bush hedge;

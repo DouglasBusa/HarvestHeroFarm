@@ -6,27 +6,34 @@
 <meta name="theme-color" content="#7bc950">
 <title>Harvest Hero Farm</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <canvas id="game"></canvas>
 <div id="hud" class="hidden">
-  <div class="pill" id="wheatPill">🌾 <span id="wheat">0</span></div>
-  <div class="pill" id="coinPill">🪙 <span id="coins">0</span></div>
-  <div class="pill" id="timePill">⏱ <span id="time">0:00</span></div>
-  <button id="soundBtn" class="pill btn" aria-label="Sound">🔊</button>
-  <button id="quitBtn" class="pill btn" aria-label="End round">⏹</button>
+  <div id="hudLeft">
+    <div class="pill" id="lvlPill"><b id="lvl">Lv 1</b><div id="xpBar"><div id="xpFill"></div></div></div>
+    <div class="row">
+      <div class="pill" id="timePill">⏱ <span id="time">0:00</span></div>
+      <button id="shopBtn" class="pill btn" aria-label="Upgrades">🛠️</button>
+      <button id="soundBtn" class="pill btn" aria-label="Sound">🔊</button>
+      <button id="quitBtn" class="pill btn" aria-label="Menu">🏠</button>
+    </div>
+    <div id="goalBar" class="hidden"><div id="goalFill"></div><span id="goalText"></span></div>
+  </div>
+  <div id="res"></div>
 </div>
-<div id="goalBar" class="hidden"><div id="goalFill"></div><span id="goalText"></span></div>
+<div id="tip" class="hidden"></div>
 <div id="hint" class="hidden"><div class="hand">👆</div><div>DRAG TO MOVE</div></div>
 
 <div id="startScreen" class="screen">
   <div class="card">
     <h1>🌾 Harvest Hero Farm 🌾</h1>
-    <p>Walk through wheat to harvest it, chop trees to open new fields, and sell at the market!</p>
-    <button class="big" id="goalBtn">🎯 Goal Mode<small>Earn 500 coins fast!</small></button>
-    <button class="big alt" id="endlessBtn">♾️ Endless Mode<small>Best: <span id="bestEndless">0</span> coins in 3 minutes</small></button>
-    <p class="best">Fastest goal: <span id="bestGoal">—</span></p>
+    <p>Harvest crops, chop trees, sell at the market, level up and upgrade your tools!</p>
+    <button class="big" id="farmBtn">🚜 My Farm<small id="farmInfo">Level 1 · keeps your progress</small></button>
+    <button class="big alt" id="goalBtn">🎯 Goal Challenge<small>Fresh farm · earn 500 coins fast! Best: <span id="bestGoal">—</span></small></button>
+    <button class="big alt2" id="endlessBtn">⏱ 3-Minute Rush<small>Fresh farm · Best: <span id="bestEndless">0</span> coins</small></button>
+    <button class="small" id="newFarmBtn">🌱 New farm (start over)</button>
   </div>
   <footer>100% free · no ads · no purchases · made for kids &amp; families</footer>
 </div>
@@ -41,6 +48,23 @@
   </div>
 </div>
 
-<script src="game.js?v=2"></script>
+<div id="shop" class="screen hidden">
+  <div class="card wide">
+    <h1>🛠️ Upgrades</h1>
+    <p class="coinsLine">You have 🪙 <b id="shopCoins">0</b></p>
+    <div id="shopList"></div>
+    <button class="big" id="shopClose">Back to farming</button>
+  </div>
+</div>
+
+<div id="levelUp" class="screen hidden">
+  <div class="card">
+    <h1 id="luTitle">Level 2! 🎉</h1>
+    <p id="luText"></p>
+    <button class="big" id="luOk">Yay!</button>
+  </div>
+  <div id="confetti"></div>
+</div>
+<script src="game.js?v=3"></script>
 </body>
 </html>

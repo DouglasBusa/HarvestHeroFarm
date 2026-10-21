@@ -27,19 +27,21 @@ Missing manifest / missing ids / failed images fall back to the canvas art autom
 - An id like `player-walk` is found either as its own file, or as row `action: "walk"` of id `player`.
 - No `rows` = single frame.
 
-## Ids the game uses (Artie batch v1 is in `assets/art/`)
+## Ids the game uses (Artie v1.1 is in `assets/art/`)
 | what | ids / rows | drawn at (world px) |
 |---|---|---|
-| ground | tile-grass, tile-grass-flowers, tile-dirt-path, tile-path-edge-n/e/s/w, tile-path-corner-outer-nw/ne/se/sw (autotiled) | 64×64 |
-| fields | wheat-plowed (soil), wheat-ripe-sway (ripe, falls back to wheat-ripe), regrow: wheat-stubble → wheat-seed → wheat-sprout → wheat-growing | soil 64, crops 44×44 on a 32px grid |
-| farmer | `farmer` rows idle, walk-down/up/left/right, carry-* (while holding wheat), harvest, chop, cheer (after a sale) | 100×100, feet anchor y≈114/128 |
-| customers | customer-1..4 rows walk-left (arrive/leave), waiting (in queue), happy (on paying) | 84×84 |
-| trees | tree-{round,pine,fruit}, -shake (while chopped), -falling (frames 0-3, fades on last frame), -stump | 128×128 |
-| buildings | barn, market-stall | 210, 180 |
-| hedge | fence-horizontal + bush-1/bush-2 | 64 |
-| decor | well, flower-*, rock-1/2, bush-1/2 | various |
-| fx | fx-wheat-bits (harvest), fx-wood-chips (chop), fx-leaf + fx-dust (tree falls), fx-coin-sparkle (sale), fx-sparkle (fields unlock) | 64×64, 0.4s |
-| HUD | icon-wheat, icon-coin (also in bubbles) | 20-24 |
+| ground | tile-grass, tile-grass-flowers, tile-dirt-path, tile-path-edge-*, tile-path-corner-outer-* (autotiled) | 64×64 |
+| fields | wheat-plowed (all fields), fence-horizontal along each field top, gate-locked / gate-open (level fields) | 64, gate 128×64 |
+| wheat | wheat-ripe-sway (fallback wheat-ripe), regrow wheat-stubble → wheat-seed → wheat-sprout → wheat-growing | 44 on 32px grid |
+| carrot / corn / pumpkin | crop-{carrot,corn,pumpkin}-{harvested,seed,sprout,growing,ripe} | 44 / 46 / 56 (pumpkin on 48px grid) |
+| farmer | `farmer-blue` (fallback `farmer`) rows idle, walk-*, carry-* (holding crops), harvest, chop, cheer | 100×100 |
+| customers | customer-1..4 rows walk-left, waiting, happy | 84×84 |
+| trees | tree-{round,pine,fruit}, -shake, -falling (fade on last frame), -stump; log-pile + apple drops | 128 |
+| market | market-stall + market-counter-blue (sell counter) | 170, 150 |
+| windmill | `windmill` row spin (fallback windmill-base + windmill-blades rotated at pivot 96,64) | 176 |
+| chickens | `chicken` rows idle/walk/peck, faces left (mirrored for right) | 46 |
+| props | barn, house, well, bush-1/2, flower-*, rock-1/2 | various |
+| fx | fx-wheat-bits, fx-wood-chips, fx-leaf, fx-dust, fx-coin-sparkle, fx-sparkle | 64 |
+| HUD | icon-coin, icon-wheat, icon-carrot, icon-corn, icon-pumpkin, icon-apple, icon-wood (fallback icon-log); upgrade-{sickle,axe,boots,basket,stall} in the shop | 20-48 |
 
-Loader reads Artie's `{assets:[...]}` (or `{files:[...]}`) manifest; uses `file2x` on high-DPI screens; row index from `rows[].row`.
-Unused for now: house, apple, log-pile, coin, coin-stack, price-tag, speech-bubble-*, water tiles, sun/cloud, inventory slots, action buttons.
+Not used yet: water tiles, sun/cloud, speech-bubble-*, coin/coin-stack, price-tag, inventory slots, action buttons.
