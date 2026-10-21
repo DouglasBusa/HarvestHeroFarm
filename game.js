@@ -15,11 +15,11 @@ fetch('assets/art/manifest.json', {cache: 'no-cache'}).then(r => r.ok ? r.json()
     if (!e.id || !e.file || ART[e.id]) continue;
     const img = new Image();
     img.onload = () => {
-      ART[e.id] = {img, e, sc: img.naturalWidth / (e.width || img.naturalWidth), fw: e.frameWidth || e.width || img.naturalWidth, fh: e.frameHeight || e.height || img.naturalHeight,
+      ART[e.id] = {img, e, pix: !!(m.pixelArt || e.pixelArt), sc: img.naturalWidth / (e.width || img.naturalWidth), fw: e.frameWidth || e.width || img.naturalWidth, fh: e.frameHeight || e.height || img.naturalHeight,
         rows: (e.rows || [{action: 'default', frames: 1, fps: 1}]).map((r, i) => ({row: i, ...r}))};
       if (e.id.startsWith('icon-') || e.id.startsWith('upgrade-')) iconsDirty = true;
     };
-    img.src = 'assets/art/' + (hi && e.file2x ? e.file2x : e.file);
+    img.src = 'assets/art/' + (m.pixelArt || e.pixelArt ? e.file : (hi && e.file2x ? e.file2x : e.file));
   }
 }).catch(() => {});
 function findArt(id, action) {
@@ -30,10 +30,22 @@ function findArt(id, action) {
 }
 const has = (id, act) => !!findArt(id, act);
 // bottom-centre anchored sprite. 128px character/tree frames have feet at ~y114 -> drop by that margin.
+// Cozy pixel pack: native size x4 (x2 for Artie's big objects), positions snapped to the 2-world-px grid.
+const PX2 = /^(tree-|log-pile$|barn$|house$|well$|bush-|stump$)/;
+const pxScale = id => PX2.test(id) ? 2 : 4;
+const snap = v => Math.round(v / 2) * 2;
 function art(id, x, y, w, h, o = {}) {
   const f = findArt(id, o.action); if (!f) return false;
   const [a, row] = f, n = row.frames || 1;
   const fr = o.frame != null ? Math.min(n - 1, o.frame) : Math.floor((o.t || 0) * (row.fps || 8)) % n;
+  if (a.pix && !o.fit) {
+    const e = a.e, s = o.px || pxScale(e.id), fall = /-falling$/.test(e.id);
+    const footN = o.foot === 0 ? 0 : a.fh === 32 ? 4 : a.fh === 16 && /^chicken/.test(e.id) ? 2 : 0;
+    const ax = (e.anchorX ?? (fall ? e.pivotX : null) ?? a.fw / 2) * s, ay = (e.anchorY ?? (fall ? e.pivotY : null) ?? a.fh - footN) * s;
+    ctx.save(); ctx.translate(snap(x), snap(y)); if (o.flip) ctx.scale(-1, 1); if (o.alpha != null) ctx.globalAlpha *= o.alpha;
+    ctx.drawImage(a.img, fr * a.fw, row.row * a.fh, a.fw, a.fh, -ax, -ay, a.fw * s, a.fh * s);
+    ctx.restore(); return true;
+  }
   const foot = o.foot != null ? o.foot : (a.fh === 128 ? 14 / 128 : 0);
   ctx.save(); ctx.translate(x, y + h * foot); if (o.flip) ctx.scale(-1, 1); if (o.alpha != null) ctx.globalAlpha *= o.alpha;
   ctx.drawImage(a.img, fr * a.fw * a.sc, row.row * a.fh * a.sc, a.fw * a.sc, a.fh * a.sc, -w / 2, -h, w, h);
@@ -58,13 +70,14 @@ $('soundBtn').onclick = () => { soundOn = !soundOn; localStorage.setItem('hhf-so
 // ================= Game data =================
 const CROPS = {
   // wheat: one stalk clump per 32px; other crops: Artie's 64px plot tiles (several plants each -> yield)
-  wheat:   {lvl: 1, grow: 6,  price: 5,  xp: 1, emoji: '🌾', grid: 32, size: 44, yield: 1, name: 'Wheat'},
+  wheat:   {lvl: 1, grow: 6,  price: 5,  xp: 1, emoji: '🌾', grid: 64, size: 64, yield: 3, name: 'Wheat'},
   carrot:  {lvl: 2, grow: 10, price: 8,  xp: 2, emoji: '🥕', grid: 64, size: 64, yield: 3, name: 'Carrots'},
   corn:    {lvl: 3, grow: 12, price: 12, xp: 3, emoji: '🌽', grid: 64, size: 64, yield: 3, name: 'Corn'},
   pumpkin: {lvl: 4, grow: 15, price: 20, xp: 5, emoji: '🎃', grid: 64, size: 64, yield: 2, name: 'Pumpkins'},
+  cabbage: {lvl: 5, grow: 18, price: 26, xp: 6, emoji: '🥬', grid: 64, size: 64, yield: 2, name: 'Cabbages'},
 };
 const GOODS = {...CROPS, apple: {price: 6, emoji: '🍎', name: 'Apples'}, wood: {price: 4, emoji: '🪵', name: 'Wood'}};
-const ICON = {coins: 'icon-coin', wheat: 'icon-wheat', carrot: 'icon-carrot', corn: 'icon-corn', pumpkin: 'icon-pumpkin', apple: 'icon-apple', wood: 'icon-wood'};
+const ICON = {coins: 'icon-coin', wheat: 'icon-wheat', carrot: 'icon-carrot', corn: 'icon-corn', pumpkin: 'icon-pumpkin', cabbage: 'icon-cabbage', apple: 'icon-apple', wood: 'icon-wood'};
 const EMOJI = {coins: '🪙', ...Object.fromEntries(Object.entries(GOODS).map(([k, v]) => [k, v.emoji]))};
 const iconFor = k => ART[ICON[k]] ? ICON[k] : (k === 'wood' && ART['icon-log'] ? 'icon-log' : null);
 const UPG = {
@@ -76,14 +89,14 @@ const UPG = {
 };
 const LEVELS = [0, 0, 250, 700, 1400, 2400];
 const needXp = l => l < LEVELS.length ? LEVELS[l] : 2400 + 1300 * (l - 5);
-const UNLOCK = {2: '🥕 The carrot field is open!', 3: '🌽 The corn field is open!', 4: '🎃 The pumpkin patch is open!'};
+const UNLOCK = {2: '🥕 The carrot field is open!', 3: '🌽 The corn field is open!', 4: '🎃 The pumpkin patch is open!', 5: '🥬 The cabbage patch is open!'};
 
 // ================= World layout =================
 const fields = [
   {x: 128, y: 448, w: 320, h: 256, crop: 'wheat'}, {x: 576, y: 448, w: 320, h: 256, crop: 'wheat'},
   {x: 128, y: 960, w: 320, h: 256, crop: 'wheat', treeLock: true}, {x: 576, y: 960, w: 320, h: 256, crop: 'wheat', treeLock: true},
   {x: 128, y: 1408, w: 320, h: 192, crop: 'carrot'}, {x: 576, y: 1408, w: 320, h: 192, crop: 'corn'},
-  {x: 128, y: 1728, w: 320, h: 128, crop: 'pumpkin'}, {x: 576, y: 1728, w: 320, h: 128, crop: 'pumpkin'},
+  {x: 128, y: 1728, w: 320, h: 128, crop: 'pumpkin'}, {x: 576, y: 1728, w: 320, h: 128, crop: 'cabbage'},
 ];
 fields.forEach(f => f.lvl = CROPS[f.crop].lvl);
 const hedges = [{x: 0, y: 768, w: 416, h: 64}, {x: 608, y: 768, w: 416, h: 64}];
@@ -104,16 +117,16 @@ function pathTile(x, y) {
   if (n) return 'tile-path-edge-n'; if (s) return 'tile-path-edge-s'; if (w) return 'tile-path-edge-w'; if (e) return 'tile-path-edge-e';
   return 'tile-dirt-path';
 }
-const TREE_SPOTS = [[448, 816, 'round', 1], [512, 816, 'pine', 1], [576, 816, 'fruit', 1], [928, 256, 'round'], [990, 640, 'fruit'], [34, 640, 'pine'],
+const TREE_SPOTS = [[462, 816, 'pine', 1], [562, 816, 'pine', 1], [928, 256, 'round'], [990, 640, 'fruit'], [34, 640, 'pine'],
   [990, 1100, 'round'], [34, 1100, 'fruit'], [330, 1300, 'pine'], [736, 1300, 'fruit'], [990, 1560, 'round'], [34, 1560, 'pine']];
 const CHICK_ZONES = [{x: 700, y: 130, w: 280, h: 90}, {x: 40, y: 850, w: 360, h: 40}, {x: 640, y: 850, w: 340, h: 40}, {x: 60, y: 1240, w: 900, h: 40}];
 const decor = [['well', 965, 1470, 80], ['flower-red', 290, 300, 26], ['flower-yellow', 700, 410, 26], ['flower-purple', 960, 420, 26], ['flower-white', 40, 900, 26],
-  ['rock-1', 680, 905, 36], ['rock-2', 40, 400, 36], ['bush-1', 990, 900, 52], ['bush-2', 300, 1660, 48], ['flower-red', 880, 1250, 26], ['house', 820, 1900, 130]];
+  ['rock-1', 680, 905, 36], ['rock-2', 40, 400, 36], ['bush-1', 990, 900, 52], ['bush-2', 300, 1660, 48], ['flower-red', 880, 1250, 26], ['house', 820, 1900, 130], ['mailbox', 960, 1890, 0], ['villager', 690, 1880, 0], ['rock-2', 980, 1700, 0], ['bush-1', 40, 1900, 0]];
 
 // ================= State =================
 let S, plants, trees, customers, floats, parts, fx, flyers, pickups, chickens, player;
 const SAVE_KEY = 'hhf-farm-v1';
-const freshProgress = () => ({level: 1, xp: 0, coins: 0, inv: {wheat: 0, carrot: 0, corn: 0, pumpkin: 0, apple: 0, wood: 0}, upg: {sickle: 0, axe: 0, boots: 0, basket: 0, stall: 0}, gatesDown: false});
+const freshProgress = () => ({level: 1, xp: 0, coins: 0, inv: {wheat: 0, carrot: 0, corn: 0, pumpkin: 0, cabbage: 0, apple: 0, wood: 0}, upg: {sickle: 0, axe: 0, boots: 0, basket: 0, stall: 0}, gatesDown: false});
 function loadFarm() { try { const p = JSON.parse(localStorage.getItem(SAVE_KEY)); if (p && p.level) { const f = freshProgress(); return {...f, ...p, inv: {...f.inv, ...p.inv}, upg: {...f.upg, ...p.upg}}; } } catch (e) {} return freshProgress(); }
 function saveFarm() { if (!S || S.mode !== 'farm') return; const {level, xp, coins, inv, upg, gatesDown} = S; localStorage.setItem(SAVE_KEY, JSON.stringify({level, xp, coins, inv, upg, gatesDown})); }
 const U = k => UPG[k].vals[S.upg[k]];
@@ -170,7 +183,9 @@ function tip(msg, secs = 2.2) { if (tipMsg === msg && tipT > 0) { tipT = secs; r
 function resize() {
   dpr = Math.min(devicePixelRatio || 1, 2.5); vw = innerWidth; vh = innerHeight;
   cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
-  scale = Math.max(.55, Math.min(1.5, Math.min(vw, vh) / 520));
+  const base = Math.max(.55, Math.min(1.5, Math.min(vw, vh) / 520));
+  const k = Math.max(2, 2 * Math.round(2 * base * dpr)); scale = k / (4 * dpr); // 1 art px = k device px (x4) or k/2 (x2)
+  ctx.imageSmoothingEnabled = false;
 }
 addEventListener('resize', resize); resize();
 addEventListener('visibilitychange', () => { if (document.hidden) saveFarm(); });
@@ -282,7 +297,7 @@ function update(dt) {
   // customers & selling
   let queue = customers.filter(c => !c.leaving);
   while (queue.length < 4) { const c = newCustomer(); c.x = 1090 + queue.length * 70; customers.push(c); queue.push(c); }
-  queue.forEach((c, i) => { c.slot = i; const tx = 600 + i * 50; c.x += Math.sign(tx - c.x) * Math.min(Math.abs(tx - c.x), 170 * dt); });
+  queue.forEach((c, i) => { c.slot = i; const tx = 600 + i * 60; c.x += Math.sign(tx - c.x) * Math.min(Math.abs(tx - c.x), 170 * dt); });
   customers.forEach(c => { if (c.leaving) { c.leaving += dt; if (c.leaving > .7) c.x -= 190 * dt; } });
   customers = customers.filter(c => c.x > -90);
   const front = queue[0];
@@ -368,6 +383,12 @@ function outlined(text, x, y, size, fill = '#fff', stroke = '#5a3412') { ctx.fon
 function drawGround() {
   for (let y = Math.max(0, Math.floor(view.y0 / TILE) * TILE); y < Math.min(WH, view.y1 + TILE); y += TILE) for (let x = Math.max(0, Math.floor(view.x0 / TILE) * TILE); x < Math.min(WW, view.x1 + TILE); x += TILE) {
     const p = isPath(x, y), h = ((x * 7 + y * 13) / TILE) % 5;
+    if (has('ground-auto-00')) { // cozy marching-squares autotile: corner is grass only if all 4 cells around it are grass
+      let id; if (p) id = 'dirt-' + (h % 3);
+      else { const g = (dx, dy) => !isPath(x + dx * TILE, y + dy * TILE) && !isPath(x + dx * TILE, y) && !isPath(x, y + dy * TILE);
+        const idx = (g(-1, -1) ? 8 : 0) | (g(1, -1) ? 4 : 0) | (g(-1, 1) ? 2 : 0) | (g(1, 1) ? 1 : 0);
+        id = idx === 15 ? (h === 0 ? 'tile-grass-flowers' : 'tile-grass') : 'ground-auto-' + String(idx).padStart(2, '0'); }
+      if (tile(id, x, y)) continue; }
     if (tile(p ? pathTile(x, y) : h === 0 ? 'tile-grass-flowers' : 'tile-grass', x, y)) continue;
     ctx.fillStyle = p ? '#e8c88a' : ((x + y) / TILE) % 2 ? '#86d35a' : '#7bc950'; ctx.fillRect(x, y, TILE, TILE);
   }
@@ -377,7 +398,9 @@ function drawGround() {
     else { ctx.fillStyle = '#a0683a'; rr(f.x, f.y, f.w, f.h, 14); ctx.fill(); ctx.strokeStyle = '#7a4a22'; ctx.lineWidth = 4; ctx.stroke(); }
     // fence along the top of every field, with a gate on level-locked ones
     const gx = f.x + f.w / 2 - 64, lvlLock = f.lvl > 1;
-    for (let x = f.x; x < f.x + f.w; x += TILE) { if (lvlLock && x >= gx && x < gx + 128) continue; if (!tile('fence-horizontal', x, f.y - TILE)) { ctx.fillStyle = '#b9783f'; ctx.fillRect(x, f.y - 30, TILE, 6); ctx.fillRect(x, f.y - 18, TILE, 6); ctx.fillRect(x + 4, f.y - 40, 8, 34); } }
+    const stone = lvlLock && has('stone-wall-0');
+    for (let x = f.x; x < f.x + f.w; x += TILE) { if (lvlLock && x >= gx && x < gx + 128) continue; if (!tile(stone ? 'stone-wall-' + ((x / TILE) % 4) : 'fence-horizontal', x, f.y - TILE)) { ctx.fillStyle = '#b9783f'; ctx.fillRect(x, f.y - 30, TILE, 6); ctx.fillRect(x, f.y - 18, TILE, 6); ctx.fillRect(x + 4, f.y - 40, 8, 34); } }
+    if (stone) { art('wall-end-left', f.x + 20, f.y, 0, 0, {foot: 0}); art('wall-end-right', f.x + f.w - 20, f.y, 0, 0, {foot: 0}); }
     if (lvlLock) { const lk = fieldLevelLocked(f); if (!tile(lk ? 'gate-locked' : 'gate-open', gx, f.y - TILE, 128, 64)) { ctx.fillStyle = lk ? '#b9783f' : '#d9a066'; ctx.fillRect(gx, f.y - 34, 128, 20); } }
     const locked = !fieldOpen(f);
     if (locked) { ctx.fillStyle = 'rgba(60,40,20,.35)'; ctx.fillRect(f.x, f.y, f.w, f.h);
@@ -397,9 +420,10 @@ function cropStage(p) { if (p.ripe) return 'ripe'; const g = 1 - p.t / p.max; re
 const STAGE_WHEAT = {seed: 'wheat-seed', sprout: 'wheat-sprout', growing: 'wheat-growing', harvested: 'wheat-stubble'};
 function drawCrop(p, T) {
   const f = fields[p.f]; if (!fieldOpen(f) || !onScreen(p.x, p.y)) return;
-  const c = CROPS[p.crop], pop = p.popT > 0 ? 1 + p.popT * .5 : 1, sz = c.size * pop, y = p.y + 14;
+  const c = CROPS[p.crop], sz = c.size, y = p.y + 14 - (p.popT > 0 ? Math.round(p.popT * 20) : 0);
   const stage = cropStage(p);
   if (p.crop === 'wheat') { if (stage === 'ripe' ? (art('wheat-ripe-sway', p.x, y, sz, sz, {t: T + p.x * .013, foot: 0}) || art('wheat-ripe', p.x, y, sz, sz, {foot: 0})) : art(STAGE_WHEAT[stage], p.x, y, sz, sz, {foot: 0})) return; }
+  else if (stage === 'ripe' && p.crop === 'pumpkin' && art(['crop-pumpkin-ripe', 'crop-pumpkin-ripe-b', 'crop-pumpkin-ripe-c'][(p.x / 64 + p.y / 64 | 0) % 3], p.x, y, sz, sz, {foot: 0})) return;
   else if (art(`crop-${p.crop}-${stage}`, p.x, y, sz, sz, {foot: 0})) return;
   // canvas fallback
   const k = stage === 'ripe' ? 1 : stage === 'growing' ? .7 : stage === 'sprout' ? .45 : stage === 'seed' ? .2 : 0;
@@ -458,6 +482,7 @@ function drawCounter() { // blue sell counter in front of the stall
   ctx.fillStyle = '#fff'; ctx.fillRect(444, 212, 136, 8); outlined('SELL', 512, 248, 20, '#fff', '#2f6db5');
 }
 function drawCrate() { const {x, y} = crateSpot, cy = y - 34;
+  if (art('crate', x, cy + 4, 72, 64, {foot: 0})) { outlined('📦 CRATE', x, cy - 70, 15); outlined('½ price', x, cy + 26, 12, '#ffe066'); return; }
   shadow(x, cy + 4, 34); ctx.fillStyle = '#c98b4c'; rr(x - 30, cy - 34, 60, 38, 6); ctx.fill(); ctx.strokeStyle = '#8d5a2b'; ctx.lineWidth = 3; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(x - 30, cy - 21); ctx.lineTo(x + 30, cy - 21); ctx.moveTo(x - 30, cy - 9); ctx.lineTo(x + 30, cy - 9); ctx.stroke();
   outlined('📦 CRATE', x, cy - 44, 15); outlined('½ price', x, cy + 26, 12, '#ffe066'); }
@@ -494,7 +519,7 @@ function drawPickup(p, T) { const bob = Math.sin(T * 5 + p.x) * 3;
 const shirt = ['#42a5f5', '#ab47bc', '#ff7043', '#26a69a'], hair = ['#5d4037', '#212121', '#ffb300', '#8d4925'];
 function drawCustomer(c, T) { const x = c.x, y = c.y, id = 'customer-' + (c.kind + 1);
   shadow(x, y + 2, 16);
-  const settled = !c.leaving && Math.abs(c.x - (600 + c.slot * 50)) < 4;
+  const settled = !c.leaving && Math.abs(c.x - (600 + c.slot * 60)) < 4;
   const act = c.leaving ? (c.leaving < .7 ? 'happy' : 'walk-left') : settled ? 'waiting' : 'walk-left';
   if (!art(id, x, y, 84, 84, {t: T, action: act})) { const b = settled ? 0 : Math.abs(Math.sin(T * 8 + c.x)) * 3;
     ctx.fillStyle = shirt[c.kind]; rr(x - 13, y - 38 - b, 26, 32, 8); ctx.fill();
@@ -508,7 +533,7 @@ function drawCustomer(c, T) { const x = c.x, y = c.y, id = 'customer-' + (c.kind
   ctx.fillStyle = '#fff'; rr(bx, by, w, 30, 12); ctx.fill(); ctx.strokeStyle = c.slot === 0 ? '#4a90e2' : '#d9a066'; ctx.lineWidth = c.slot === 0 ? 3 : 2; ctx.stroke();
   items.forEach((k, i) => { const miss = S.inv[k] <= 0 && c.slot === 0, bo = miss ? -Math.abs(Math.sin(T * 6)) * 5 : 0; const ix = bx + 8 + i * 46; const ic = iconFor(k);
     if (miss) { ctx.fillStyle = 'rgba(255,90,90,.25)'; rr(ix - 3, by + 2, 44, 26, 8); ctx.fill(); } ctx.save(); ctx.translate(0, bo);
-    if (!(ic && art(ic, ix + 10, by + 26, 22, 22, {foot: 0}))) { ctx.font = '17px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(EMOJI[k], ix + 10, by + 22); }
+    if (!(ic && art(ic, ix + 10, by + 26, 24, 24, {foot: 0, fit: true}))) { ctx.font = '17px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(EMOJI[k], ix + 10, by + 22); }
     ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(c.order[k] - c.got[k], ix + 23, by + 21); ctx.restore(); });
 }
 function drawPlayer(T) { const {x, y, dir} = player, mv = player.moving;
@@ -534,14 +559,14 @@ function drawPlayer(T) { const {x, y, dir} = player, mv = player.moving;
     ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`🧺 ${n}/${cap}`, x, y - 101); }
 }
 function draw(T) {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   const hw = vw / 2 / scale, hh = vh / 2 / scale;
   cam.x += (player.x - cam.x) * .15; cam.y += (player.y - cam.y) * .15;
   cam.cx = WW < hw * 2 ? WW / 2 : Math.max(hw, Math.min(WW - hw, cam.x)); cam.cy = WH < hh * 2 ? WH / 2 : Math.max(hh, Math.min(WH - hh, cam.y));
   view = {x0: cam.cx - hw, y0: cam.cy - hh, x1: cam.cx + hw, y1: cam.cy + hh};
   ctx.fillStyle = '#5aa83c'; ctx.fillRect(0, 0, vw, vh);
   const sk = camShake > 0 ? (Math.random() - .5) * 10 * camShake / .3 : 0;
-  ctx.translate(vw / 2 + sk, vh / 2 + sk); ctx.scale(scale, scale); ctx.translate(-cam.cx, -cam.cy);
+  const z = scale * dpr; ctx.setTransform(z, 0, 0, z, Math.round(vw / 2 * dpr - cam.cx * z + sk * dpr), Math.round(vh / 2 * dpr - cam.cy * z + sk * dpr)); ctx.imageSmoothingEnabled = false;
   drawGround();
   const list = [];
   // crops sort slightly "behind" their row so the farmer's legs stay visible in the field
@@ -560,7 +585,7 @@ function draw(T) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   flyers.forEach(f => { if (f.t < 0) return; const to = typeof f.to === 'function' ? f.to() : f.to, k = Math.min(1, f.t / f.dur), e = k * k * (3 - 2 * k);
     const x = f.x0 + (to.x - f.x0) * e, y = f.y0 + (to.y - f.y0) * e - Math.sin(k * Math.PI) * 60; const ic = iconFor(f.k);
-    if (!(ic && art(ic, x, y + 14, 28, 28, {foot: 0}))) { ctx.font = '24px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(EMOJI[f.k], x, y + 8); } });
+    if (!(ic && art(ic, x, y + 14, 32, 32, {foot: 0, fit: true}))) { ctx.font = '24px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(EMOJI[f.k], x, y + 8); } });
   if (joy.active) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(joy.bx, joy.by, 60, 0, 7); ctx.fill(); ctx.strokeStyle = '#fff8'; ctx.lineWidth = 3; ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(joy.bx + joy.dx * 60, joy.by + joy.dy * 60, 26, 0, 7); ctx.fill(); }
 }

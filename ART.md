@@ -4,6 +4,9 @@ Everything is drawn with canvas code by default. Drop sprites into `assets/art/`
 `manifest.json` (same style as EzBake4Kids) and they replace the built-in drawings by id.
 Missing manifest / missing ids / failed images fall back to the canvas art automatically.
 
+## Current pack: cozy pixel art (v0.4)
+`assets/art/` is Artie's cozy pack (`pixelArt: true`, native tile 16 / frame 32). The game draws native ×4 (×2 for tree-*, barn, house, well, bush-*, log-pile, stump), honours anchorX/anchorY and the -falling pivot, uses ground-auto-00..15 marching-squares tiles (bits tl,tr,bl,br = 8,4,2,1; 1 = grass), stone-wall-0..3 + wall-end-left/right, crate, mailbox, villager, crop-cabbage-*, crop-pumpkin-ripe-b/c. The older notes below describe the original smooth pack.
+
 ## Spec
 - World grid: **64×64 px tiles** (map is 16×22 tiles). Ground tiles 64×64 (+ `png@2x` 128×128).
 - Sprite frames: **128×128**, top-down 3/4 view, facing **right** (game mirrors for left).

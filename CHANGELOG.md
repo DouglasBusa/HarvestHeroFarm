@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4 — 2026-10-20
+- Switched to Artie's cozy pixel-art pack (175 ids). Pixel-perfect rendering: smoothing off, integer device-pixel scale, positions snapped. Assets drawn at native ×4 (big cozy objects such as trees, barn, house, well, bushes and log piles at ×2).
+- Marching-squares dirt/grass autotiles for paths, stone walls with end posts plus gates on level fields, crate art for the shipping crate, mailbox and villager decor, pumpkin variants.
+- All crops are 64px opaque plots (wheat gives +3 per plot). New Level 5 crop: cabbage (replaces the right-hand pumpkin field).
+- The tree gate is now 2 pines, to fit the bigger cozy trees. Cache bust v=6.
+
 ## v0.3.2 — 2026-10-20
 - Fix softlock: a full basket plus a customer who wants something you can't get no longer gets stuck.
   - 📦 Shipping crate next to the stall always buys anything you hold at ½ price.
