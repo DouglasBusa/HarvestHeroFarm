@@ -25,3 +25,4 @@ footer{margin-top:14px;color:#fff;font-weight:bold;text-shadow:0 2px 3px #0008;t
 #stars{font-size:46px;letter-spacing:6px}
 .best{font-size:14px}
 @media (max-width:480px){.pill{font-size:16px;padding:3px 8px}#hud{flex-wrap:nowrap;gap:4px}#goalBar{top:calc(48px + env(safe-area-inset-top))}}
+.icon{width:24px;height:24px;vertical-align:-5px;margin-right:2px}

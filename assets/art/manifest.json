@@ -1,1 +1,1164 @@
-{"game":"HarvestHeroFarm","files":[]}
+{
+ "version": 1,
+ "basePath": "assets/art/",
+ "tileSize": 64,
+ "frameSize": 128,
+ "anchor": "frames: bottom-center feet/base at (64,112-116); tree-*-falling: tree drawn at 80% scale, pivot/base at (40,112)",
+ "assets": [
+  {
+   "id": "farmer",
+   "file": "characters/png/farmer.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 1536,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "idle",
+     "row": 0,
+     "frames": 4,
+     "fps": 5
+    },
+    {
+     "action": "walk-down",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-up",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 3,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 4,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "harvest",
+     "row": 5,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "chop",
+     "row": 6,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "cheer",
+     "row": 7,
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "action": "carry-down",
+     "row": 8,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-up",
+     "row": 9,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-left",
+     "row": 10,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "carry-right",
+     "row": 11,
+     "frames": 6,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "farmer-idle",
+   "file": "characters/png/farmer-idle.png",
+   "svg": "characters/svg/farmer-idle.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-1",
+   "file": "characters/png/customer-1.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 640,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "walk-down",
+     "row": 0,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "waiting",
+     "row": 3,
+     "frames": 2,
+     "fps": 3
+    },
+    {
+     "action": "happy",
+     "row": 4,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "customer-1-waiting",
+   "file": "characters/png/customer-1-waiting.png",
+   "svg": "characters/svg/customer-1-waiting.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-1-happy",
+   "file": "characters/png/customer-1-happy.png",
+   "svg": "characters/svg/customer-1-happy.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-2",
+   "file": "characters/png/customer-2.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 640,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "walk-down",
+     "row": 0,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "waiting",
+     "row": 3,
+     "frames": 2,
+     "fps": 3
+    },
+    {
+     "action": "happy",
+     "row": 4,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "customer-2-waiting",
+   "file": "characters/png/customer-2-waiting.png",
+   "svg": "characters/svg/customer-2-waiting.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-2-happy",
+   "file": "characters/png/customer-2-happy.png",
+   "svg": "characters/svg/customer-2-happy.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-3",
+   "file": "characters/png/customer-3.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 640,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "walk-down",
+     "row": 0,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "waiting",
+     "row": 3,
+     "frames": 2,
+     "fps": 3
+    },
+    {
+     "action": "happy",
+     "row": 4,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "customer-3-waiting",
+   "file": "characters/png/customer-3-waiting.png",
+   "svg": "characters/svg/customer-3-waiting.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-3-happy",
+   "file": "characters/png/customer-3-happy.png",
+   "svg": "characters/svg/customer-3-happy.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-4",
+   "file": "characters/png/customer-4.png",
+   "type": "spritesheet",
+   "width": 768,
+   "height": 640,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "walk-down",
+     "row": 0,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-left",
+     "row": 1,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "walk-right",
+     "row": 2,
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "action": "waiting",
+     "row": 3,
+     "frames": 2,
+     "fps": 3
+    },
+    {
+     "action": "happy",
+     "row": 4,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "customer-4-waiting",
+   "file": "characters/png/customer-4-waiting.png",
+   "svg": "characters/svg/customer-4-waiting.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "customer-4-happy",
+   "file": "characters/png/customer-4-happy.png",
+   "svg": "characters/svg/customer-4-happy.svg",
+   "type": "image",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tile-grass",
+   "file": "tiles/png/tile-grass.png",
+   "svg": "tiles/svg/tile-grass.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-grass@2x.png"
+  },
+  {
+   "id": "tile-grass-flowers",
+   "file": "tiles/png/tile-grass-flowers.png",
+   "svg": "tiles/svg/tile-grass-flowers.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-grass-flowers@2x.png"
+  },
+  {
+   "id": "tile-dirt-path",
+   "file": "tiles/png/tile-dirt-path.png",
+   "svg": "tiles/svg/tile-dirt-path.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-dirt-path@2x.png"
+  },
+  {
+   "id": "tile-water",
+   "file": "tiles/png/tile-water.png",
+   "svg": "tiles/svg/tile-water.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-water@2x.png"
+  },
+  {
+   "id": "tile-path-edge-n",
+   "file": "tiles/png/tile-path-edge-n.png",
+   "svg": "tiles/svg/tile-path-edge-n.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-edge-n@2x.png"
+  },
+  {
+   "id": "tile-path-edge-e",
+   "file": "tiles/png/tile-path-edge-e.png",
+   "svg": "tiles/svg/tile-path-edge-e.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-edge-e@2x.png"
+  },
+  {
+   "id": "tile-path-edge-s",
+   "file": "tiles/png/tile-path-edge-s.png",
+   "svg": "tiles/svg/tile-path-edge-s.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-edge-s@2x.png"
+  },
+  {
+   "id": "tile-path-edge-w",
+   "file": "tiles/png/tile-path-edge-w.png",
+   "svg": "tiles/svg/tile-path-edge-w.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-edge-w@2x.png"
+  },
+  {
+   "id": "tile-path-corner-outer-nw",
+   "file": "tiles/png/tile-path-corner-outer-nw.png",
+   "svg": "tiles/svg/tile-path-corner-outer-nw.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-outer-nw@2x.png"
+  },
+  {
+   "id": "tile-path-corner-outer-ne",
+   "file": "tiles/png/tile-path-corner-outer-ne.png",
+   "svg": "tiles/svg/tile-path-corner-outer-ne.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-outer-ne@2x.png"
+  },
+  {
+   "id": "tile-path-corner-outer-se",
+   "file": "tiles/png/tile-path-corner-outer-se.png",
+   "svg": "tiles/svg/tile-path-corner-outer-se.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-outer-se@2x.png"
+  },
+  {
+   "id": "tile-path-corner-outer-sw",
+   "file": "tiles/png/tile-path-corner-outer-sw.png",
+   "svg": "tiles/svg/tile-path-corner-outer-sw.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-outer-sw@2x.png"
+  },
+  {
+   "id": "tile-path-corner-inner-nw",
+   "file": "tiles/png/tile-path-corner-inner-nw.png",
+   "svg": "tiles/svg/tile-path-corner-inner-nw.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-inner-nw@2x.png"
+  },
+  {
+   "id": "tile-path-corner-inner-ne",
+   "file": "tiles/png/tile-path-corner-inner-ne.png",
+   "svg": "tiles/svg/tile-path-corner-inner-ne.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-inner-ne@2x.png"
+  },
+  {
+   "id": "tile-path-corner-inner-se",
+   "file": "tiles/png/tile-path-corner-inner-se.png",
+   "svg": "tiles/svg/tile-path-corner-inner-se.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-inner-se@2x.png"
+  },
+  {
+   "id": "tile-path-corner-inner-sw",
+   "file": "tiles/png/tile-path-corner-inner-sw.png",
+   "svg": "tiles/svg/tile-path-corner-inner-sw.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-path-corner-inner-sw@2x.png"
+  },
+  {
+   "id": "tile-water-edge-n",
+   "file": "tiles/png/tile-water-edge-n.png",
+   "svg": "tiles/svg/tile-water-edge-n.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-water-edge-n@2x.png"
+  },
+  {
+   "id": "tile-water-edge-e",
+   "file": "tiles/png/tile-water-edge-e.png",
+   "svg": "tiles/svg/tile-water-edge-e.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-water-edge-e@2x.png"
+  },
+  {
+   "id": "tile-water-edge-s",
+   "file": "tiles/png/tile-water-edge-s.png",
+   "svg": "tiles/svg/tile-water-edge-s.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-water-edge-s@2x.png"
+  },
+  {
+   "id": "tile-water-edge-w",
+   "file": "tiles/png/tile-water-edge-w.png",
+   "svg": "tiles/svg/tile-water-edge-w.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "tiles/png/tile-water-edge-w@2x.png"
+  },
+  {
+   "id": "wheat-plowed",
+   "file": "crops/png/wheat-plowed.png",
+   "svg": "crops/svg/wheat-plowed.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-plowed@2x.png"
+  },
+  {
+   "id": "wheat-seed",
+   "file": "crops/png/wheat-seed.png",
+   "svg": "crops/svg/wheat-seed.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-seed@2x.png"
+  },
+  {
+   "id": "wheat-sprout",
+   "file": "crops/png/wheat-sprout.png",
+   "svg": "crops/svg/wheat-sprout.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-sprout@2x.png"
+  },
+  {
+   "id": "wheat-growing",
+   "file": "crops/png/wheat-growing.png",
+   "svg": "crops/svg/wheat-growing.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-growing@2x.png"
+  },
+  {
+   "id": "wheat-ripe",
+   "file": "crops/png/wheat-ripe.png",
+   "svg": "crops/svg/wheat-ripe.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-ripe@2x.png"
+  },
+  {
+   "id": "wheat-stubble",
+   "file": "crops/png/wheat-stubble.png",
+   "svg": "crops/svg/wheat-stubble.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "crops/png/wheat-stubble@2x.png"
+  },
+  {
+   "id": "wheat-ripe-sway",
+   "file": "crops/png/wheat-ripe-sway.png",
+   "type": "spritesheet",
+   "width": 192,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "sway",
+     "row": 0,
+     "frames": 3,
+     "fps": 4
+    }
+   ],
+   "file2x": "crops/png/wheat-ripe-sway@2x.png"
+  },
+  {
+   "id": "wheat-bundle",
+   "file": "crops/png/wheat-bundle.png",
+   "svg": "crops/svg/wheat-bundle.svg",
+   "type": "pickup",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "tree-round",
+   "file": "trees/png/tree-round.png",
+   "svg": "trees/svg/tree-round.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tree-round-shake",
+   "file": "trees/png/tree-round-shake.png",
+   "type": "spritesheet",
+   "width": 384,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "shake",
+     "row": 0,
+     "frames": 3,
+     "fps": 12
+    }
+   ]
+  },
+  {
+   "id": "tree-round-falling",
+   "file": "trees/png/tree-round-falling.png",
+   "type": "spritesheet",
+   "width": 512,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "fall",
+     "row": 0,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "tree-round-stump",
+   "file": "trees/png/tree-round-stump.png",
+   "svg": "trees/svg/tree-round-stump.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tree-pine",
+   "file": "trees/png/tree-pine.png",
+   "svg": "trees/svg/tree-pine.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tree-pine-shake",
+   "file": "trees/png/tree-pine-shake.png",
+   "type": "spritesheet",
+   "width": 384,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "shake",
+     "row": 0,
+     "frames": 3,
+     "fps": 12
+    }
+   ]
+  },
+  {
+   "id": "tree-pine-falling",
+   "file": "trees/png/tree-pine-falling.png",
+   "type": "spritesheet",
+   "width": 512,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "fall",
+     "row": 0,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "tree-pine-stump",
+   "file": "trees/png/tree-pine-stump.png",
+   "svg": "trees/svg/tree-pine-stump.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tree-fruit",
+   "file": "trees/png/tree-fruit.png",
+   "svg": "trees/svg/tree-fruit.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "tree-fruit-shake",
+   "file": "trees/png/tree-fruit-shake.png",
+   "type": "spritesheet",
+   "width": 384,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "shake",
+     "row": 0,
+     "frames": 3,
+     "fps": 12
+    }
+   ]
+  },
+  {
+   "id": "tree-fruit-falling",
+   "file": "trees/png/tree-fruit-falling.png",
+   "type": "spritesheet",
+   "width": 512,
+   "height": 128,
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "rows": [
+    {
+     "action": "fall",
+     "row": 0,
+     "frames": 4,
+     "fps": 8
+    }
+   ]
+  },
+  {
+   "id": "tree-fruit-stump",
+   "file": "trees/png/tree-fruit-stump.png",
+   "svg": "trees/svg/tree-fruit-stump.svg",
+   "type": "object",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "log-pile",
+   "file": "trees/png/log-pile.png",
+   "svg": "trees/svg/log-pile.svg",
+   "type": "pickup",
+   "width": 128,
+   "height": 128
+  },
+  {
+   "id": "apple",
+   "file": "trees/png/apple.png",
+   "svg": "trees/svg/apple.svg",
+   "type": "pickup",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "market-stall",
+   "file": "market/png/market-stall.png",
+   "svg": "market/svg/market-stall.svg",
+   "type": "object",
+   "width": 160,
+   "height": 160
+  },
+  {
+   "id": "coin",
+   "file": "market/png/coin.png",
+   "svg": "market/svg/coin.svg",
+   "type": "pickup",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "coin-stack",
+   "file": "market/png/coin-stack.png",
+   "svg": "market/svg/coin-stack.svg",
+   "type": "pickup",
+   "width": 48,
+   "height": 48
+  },
+  {
+   "id": "price-tag",
+   "file": "market/png/price-tag.png",
+   "svg": "market/svg/price-tag.svg",
+   "type": "ui",
+   "width": 48,
+   "height": 48
+  },
+  {
+   "id": "speech-bubble-wheat",
+   "file": "market/png/speech-bubble-wheat.png",
+   "svg": "market/svg/speech-bubble-wheat.svg",
+   "type": "ui",
+   "width": 80,
+   "height": 80
+  },
+  {
+   "id": "speech-bubble-log",
+   "file": "market/png/speech-bubble-log.png",
+   "svg": "market/svg/speech-bubble-log.svg",
+   "type": "ui",
+   "width": 80,
+   "height": 80
+  },
+  {
+   "id": "speech-bubble-apple",
+   "file": "market/png/speech-bubble-apple.png",
+   "svg": "market/svg/speech-bubble-apple.svg",
+   "type": "ui",
+   "width": 80,
+   "height": 80
+  },
+  {
+   "id": "fence-horizontal",
+   "file": "props/png/fence-horizontal.png",
+   "svg": "props/svg/fence-horizontal.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "props/png/fence-horizontal@2x.png"
+  },
+  {
+   "id": "fence-vertical",
+   "file": "props/png/fence-vertical.png",
+   "svg": "props/svg/fence-vertical.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "props/png/fence-vertical@2x.png"
+  },
+  {
+   "id": "fence-post",
+   "file": "props/png/fence-post.png",
+   "svg": "props/svg/fence-post.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "props/png/fence-post@2x.png"
+  },
+  {
+   "id": "fence-corner",
+   "file": "props/png/fence-corner.png",
+   "svg": "props/svg/fence-corner.svg",
+   "type": "tile",
+   "width": 64,
+   "height": 64,
+   "file2x": "props/png/fence-corner@2x.png"
+  },
+  {
+   "id": "barn",
+   "file": "props/png/barn.png",
+   "svg": "props/svg/barn.svg",
+   "type": "object",
+   "width": 192,
+   "height": 192
+  },
+  {
+   "id": "house",
+   "file": "props/png/house.png",
+   "svg": "props/svg/house.svg",
+   "type": "object",
+   "width": 160,
+   "height": 160
+  },
+  {
+   "id": "bush-1",
+   "file": "props/png/bush-1.png",
+   "svg": "props/svg/bush-1.svg",
+   "type": "object",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "bush-2",
+   "file": "props/png/bush-2.png",
+   "svg": "props/svg/bush-2.svg",
+   "type": "object",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "flower-red",
+   "file": "props/png/flower-red.png",
+   "svg": "props/svg/flower-red.svg",
+   "type": "object",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "flower-yellow",
+   "file": "props/png/flower-yellow.png",
+   "svg": "props/svg/flower-yellow.svg",
+   "type": "object",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "flower-purple",
+   "file": "props/png/flower-purple.png",
+   "svg": "props/svg/flower-purple.svg",
+   "type": "object",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "flower-white",
+   "file": "props/png/flower-white.png",
+   "svg": "props/svg/flower-white.svg",
+   "type": "object",
+   "width": 32,
+   "height": 32
+  },
+  {
+   "id": "rock-1",
+   "file": "props/png/rock-1.png",
+   "svg": "props/svg/rock-1.svg",
+   "type": "object",
+   "width": 48,
+   "height": 48
+  },
+  {
+   "id": "rock-2",
+   "file": "props/png/rock-2.png",
+   "svg": "props/svg/rock-2.svg",
+   "type": "object",
+   "width": 48,
+   "height": 48
+  },
+  {
+   "id": "well",
+   "file": "props/png/well.png",
+   "svg": "props/svg/well.svg",
+   "type": "object",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "sun",
+   "file": "props/png/sun.png",
+   "svg": "props/svg/sun.svg",
+   "type": "object",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "cloud-1",
+   "file": "props/png/cloud-1.png",
+   "svg": "props/svg/cloud-1.svg",
+   "type": "object",
+   "width": 128,
+   "height": 64
+  },
+  {
+   "id": "cloud-2",
+   "file": "props/png/cloud-2.png",
+   "svg": "props/svg/cloud-2.svg",
+   "type": "object",
+   "width": 128,
+   "height": 64
+  },
+  {
+   "id": "icon-wheat",
+   "file": "ui/png/icon-wheat.png",
+   "svg": "ui/svg/icon-wheat.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-log",
+   "file": "ui/png/icon-log.png",
+   "svg": "ui/svg/icon-log.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-coin",
+   "file": "ui/png/icon-coin.png",
+   "svg": "ui/svg/icon-coin.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "icon-apple",
+   "file": "ui/png/icon-apple.png",
+   "svg": "ui/svg/icon-apple.svg",
+   "type": "icon",
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": "coin-counter",
+   "file": "ui/png/coin-counter.png",
+   "svg": "ui/svg/coin-counter.svg",
+   "type": "ui",
+   "width": 192,
+   "height": 64
+  },
+  {
+   "id": "inventory-slot",
+   "file": "ui/png/inventory-slot.png",
+   "svg": "ui/svg/inventory-slot.svg",
+   "type": "ui",
+   "width": 80,
+   "height": 80
+  },
+  {
+   "id": "inventory-slot-selected",
+   "file": "ui/png/inventory-slot-selected.png",
+   "svg": "ui/svg/inventory-slot-selected.svg",
+   "type": "ui",
+   "width": 80,
+   "height": 80
+  },
+  {
+   "id": "button-harvest",
+   "file": "ui/png/button-harvest.png",
+   "svg": "ui/svg/button-harvest.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "button-harvest-pressed",
+   "file": "ui/png/button-harvest-pressed.png",
+   "svg": "ui/svg/button-harvest-pressed.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "button-chop",
+   "file": "ui/png/button-chop.png",
+   "svg": "ui/svg/button-chop.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "button-chop-pressed",
+   "file": "ui/png/button-chop-pressed.png",
+   "svg": "ui/svg/button-chop-pressed.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "button-sell",
+   "file": "ui/png/button-sell.png",
+   "svg": "ui/svg/button-sell.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "button-sell-pressed",
+   "file": "ui/png/button-sell-pressed.png",
+   "svg": "ui/svg/button-sell-pressed.svg",
+   "type": "button",
+   "width": 96,
+   "height": 96
+  },
+  {
+   "id": "fx-sparkle",
+   "file": "effects/png/fx-sparkle.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "fx-leaf",
+   "file": "effects/png/fx-leaf.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "fx-dust",
+   "file": "effects/png/fx-dust.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "fx-wheat-bits",
+   "file": "effects/png/fx-wheat-bits.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "fx-wood-chips",
+   "file": "effects/png/fx-wood-chips.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  },
+  {
+   "id": "fx-coin-sparkle",
+   "file": "effects/png/fx-coin-sparkle.png",
+   "type": "spritesheet",
+   "width": 256,
+   "height": 64,
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "rows": [
+    {
+     "action": "play",
+     "row": 0,
+     "frames": 4,
+     "fps": 10
+    }
+   ]
+  }
+ ]
+}

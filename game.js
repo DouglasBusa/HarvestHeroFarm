@@ -8,35 +8,46 @@ let vw = 0, vh = 0, dpr = 1, scale = 1;
 
 // ---------- Optional art (assets/art/manifest.json, Artie's format; see ART.md) ----------
 const ART = {}, TILE = 64;
-const FMT_RANK = {'png@2x': 3, png: 2, svg: 1};
 fetch('assets/art/manifest.json', {cache: 'no-cache'}).then(r => r.ok ? r.json() : null).then(m => {
   if (!m) return;
-  const list = Array.isArray(m.files) ? m.files : Object.entries(m).map(([id, d]) => Object.assign({id}, typeof d === 'string' ? {file: d} : d));
-  const best = {};
-  for (const e of list) { if (!e.id || !e.file) continue; const r = FMT_RANK[e.format] || 2; if (!best[e.id] || r > best[e.id].r) best[e.id] = {e, r}; }
-  for (const {e} of Object.values(best)) {
+  const list = m.assets || m.files || [];
+  const hi = (window.devicePixelRatio || 1) > 1.2;
+  for (const e of list) {
+    if (!e.id || !e.file || ART[e.id]) continue;
     const img = new Image();
-    img.onload = () => { ART[e.id] = {img, e, fw: e.frameWidth || img.naturalWidth, fh: e.frameHeight || img.naturalHeight, rows: e.rows || [{action: 'default', frames: e.frames || 1, fps: e.fps || 8}]}; };
-    img.src = 'assets/art/' + e.file;
+    img.onload = () => {
+      const sc = img.naturalWidth / (e.width || img.naturalWidth);
+      ART[e.id] = {img, e, sc, fw: (e.frameWidth || e.width || img.naturalWidth), fh: (e.frameHeight || e.height || img.naturalHeight),
+        rows: (e.rows || [{action: 'default', frames: 1, fps: 1}]).map((r, i) => ({row: i, ...r}))};
+      if (e.id.startsWith('icon-')) hudIcons();
+    };
+    img.src = 'assets/art/' + (hi && e.file2x ? e.file2x : e.file);
   }
 }).catch(() => {});
 // Look up "id" directly, else "base" + row action (e.g. player-walk -> id "player", row action "walk").
-function findArt(id) {
-  if (ART[id]) return [ART[id], 0];
-  const i = id.lastIndexOf('-'); if (i < 0) return null;
-  const a = ART[id.slice(0, i)]; if (!a) return null;
-  const r = a.rows.findIndex(r => r.action === id.slice(i + 1)); return r < 0 ? null : [a, r];
+function findArt(id, action) {
+  const a = ART[id];
+  if (a) { if (!action) return [a, a.rows[0]]; const r = a.rows.find(r => r.action === action); return r ? [a, r] : null; }
+  const i = id.lastIndexOf('-'); if (i < 0 || action) return null;
+  return findArt(id.slice(0, i), id.slice(i + 1));
 }
-// draw art anchored bottom-centre at (x,y); returns false if no sprite so caller draws the canvas fallback
-function art(id, x, y, w, h, t = 0, flip = false) {
-  const f = findArt(id); if (!f) return false;
-  const [a, ri] = f, row = a.rows[ri], sc = a.img.naturalWidth / (a.e.width || a.img.naturalWidth);
-  const fr = Math.floor(t * (row.fps || 8)) % (row.frames || 1);
-  ctx.save(); ctx.translate(x, y); if (flip) ctx.scale(-1, 1);
-  ctx.drawImage(a.img, fr * a.fw * sc, ri * a.fh * sc, a.fw * sc, a.fh * sc, -w / 2, -h, w, h);
+const has = (id, act) => !!findArt(id, act);
+// Draw sprite anchored bottom-centre at (x,y). Artie's 128px frames have feet at ~y114, so we drop by that margin.
+// opts: {t: time for animation, frame: explicit frame, flip, action, alpha, foot: fraction of frame below feet}
+function art(id, x, y, w, h, o = {}) {
+  const f = findArt(id, o.action); if (!f) return false;
+  const [a, row] = f, n = row.frames || 1;
+  const fr = o.frame != null ? Math.min(n - 1, o.frame) : Math.floor((o.t || 0) * (row.fps || 8)) % n;
+  const foot = o.foot != null ? o.foot : (a.fh === 128 ? 14 / 128 : 0);
+  ctx.save(); ctx.translate(x, y + h * foot); if (o.flip) ctx.scale(-1, 1); if (o.alpha != null) ctx.globalAlpha *= o.alpha;
+  ctx.drawImage(a.img, fr * a.fw * a.sc, row.row * a.fh * a.sc, a.fw * a.sc, a.fh * a.sc, -w / 2, -h, w, h);
   ctx.restore(); return true;
 }
-function tile(id, x, y) { const f = findArt(id); if (!f) return false; art(id, x + TILE / 2, y + TILE, TILE, TILE); return true; }
+function tile(id, x, y) { return art(id, x + TILE / 2, y + TILE, TILE, TILE, {foot: 0}); }
+function hudIcons() {
+  [['wheatPill', 'icon-wheat'], ['coinPill', 'icon-coin']].forEach(([p, id]) => { const a = ART[id], el = $(p); if (!a || el.querySelector('img')) return;
+    el.firstChild.textContent = ''; const im = document.createElement('img'); im.src = a.img.src; im.className = 'icon'; el.insertBefore(im, el.firstChild); });
+}
 
 // ---------- Sound (soft synth, only after a tap) ----------
 let ac = null, soundOn = localStorage.getItem('hhf-sound') !== 'off';
@@ -63,7 +74,7 @@ const walls = [ // hedges + buildings (rects)
   {x: 448, y: 128, w: 128, h: 64, stall: true},
 ];
 const stallSpot = {x: 512, y: 256};
-let plants, trees, customers, floats, parts, player, S;
+let plants, trees, customers, floats, parts, fx, player, S;
 
 function reset(mode) {
   plants = [];
@@ -73,14 +84,14 @@ function reset(mode) {
   });
   trees = [448, 512, 576].map(x => ({x, y: 816, hp: 1000, max: 1000, gate: true}))
     .concat([{x: 928, y: 256}, {x: 960, y: 640}, {x: 64, y: 640}, {x: 352, y: 1344}, {x: 736, y: 1344}].map(p => ({...p, hp: 1000, max: 1000})));
-  trees.forEach(t => Object.assign(t, {shake: 0, fall: 0, hitT: 0}));
+  trees.forEach((t, i) => Object.assign(t, {shake: 0, fall: 0, hitT: 0, kind: ['round', 'pine', 'fruit'][i % 3]}));
   customers = []; for (let i = 0; i < 3; i++) addCustomer(i);
-  floats = []; parts = [];
-  player = {x: 512, y: 380, dir: 1, moving: false, t: 0, chop: 0};
+  floats = []; parts = []; fx = [];
+  player = {x: 512, y: 380, face: 'down', harvestT: 0, cheerT: 0, dir: 1, moving: false, t: 0, chop: 0};
   S = {mode, wheat: 0, coins: 0, time: 0, left: 180, sellT: 0, running: true, goal: 500};
 }
 function addCustomer(i = customers.length) {
-  customers.push({x: 1080, slot: i, want: 4 + Math.floor(Math.random() * 7), got: 0, kind: Math.floor(Math.random() * 3), leaving: 0, y: 300});
+  customers.push({x: 1080, slot: i, want: 4 + Math.floor(Math.random() * 7), got: 0, kind: Math.floor(Math.random() * 4), leaving: 0, y: 300});
 }
 
 // ---------- Input ----------
@@ -123,9 +134,10 @@ addEventListener('resize', resize); resize();
 
 // ---------- Helpers ----------
 function float(x, y, text, color = '#fff', size = 26) { floats.push({x, y, text, color, size, life: 1}); }
-function burst(x, y, color, n = 8) { for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, s = 60 + Math.random() * 140; parts.push({x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, life: .7, color}); } }
+function spawnFx(id, x, y) { if (has(id)) fx.push({id, x, y, t: 0}); }
+function burst(x, y, color, n = 8) { const bf = burstFx; burstFx = null; if (fx && bf && has(bf)) { spawnFx(bf, x, y + 24); return; } for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, s = 60 + Math.random() * 140; parts.push({x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80, life: .7, color}); } }
 function bump(id) { const el = $(id); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
-let camShake = 0;
+let camShake = 0, burstFx = null;
 function collide(nx, ny) {
   const r = 16;
   nx = Math.max(r, Math.min(WW - r, nx)); ny = Math.max(r + 40, Math.min(WH - r, ny));
@@ -149,7 +161,7 @@ function update(dt) {
   player.moving = m > .1;
   if (player.moving) { hideHint(); player.target = null; const sp = 270;
     [player.x, player.y] = collide(player.x + mx * sp * dt, player.y + my * sp * dt);
-    if (Math.abs(mx) > .1) player.dir = mx > 0 ? 1 : -1; player.t += dt; }
+    if (Math.abs(mx) > .1) player.dir = mx > 0 ? 1 : -1; player.face = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? 'right' : 'left') : (my > 0 ? 'down' : 'up'); player.t += dt; }
   // tap-target walk
   if (player.target && !player.moving) { const t = player.target, dx = t.x - player.x, dy = t.y + 40 - player.y, d = Math.hypot(dx, dy);
     if (t.hp <= 0) player.target = null; else if (d > 50) { [player.x, player.y] = collide(player.x + dx / d * 270 * dt, player.y + dy / d * 270 * dt); player.t += dt; player.dir = dx > 0 ? 1 : -1; } }
@@ -157,41 +169,42 @@ function update(dt) {
   for (const p of plants) {
     if (!fields[p.f].open) continue;
     if (p.ripe) { if (Math.abs(p.x - player.x) < 30 && Math.abs(p.y - player.y) < 30) {
-      p.ripe = false; p.t = 6 + Math.random() * 2; S.wheat++; float(p.x, p.y - 20, '+1', '#ffe066', 22); burst(p.x, p.y, '#f4c542', 4); bump('wheatPill'); beep(660 + Math.random() * 200, .06, 'triangle', .05); }
+      p.ripe = false; p.t = p.max = 6 + Math.random() * 2; S.wheat++; player.harvestT = .35; float(p.x, p.y - 20, '+1', '#ffe066', 22); burstFx = 'fx-wheat-bits'; burst(p.x, p.y, '#f4c542', 4); bump('wheatPill'); beep(660 + Math.random() * 200, .06, 'triangle', .05); }
     } else if ((p.t -= dt) <= 0) p.ripe = true;
   }
   // chop
   player.chop = Math.max(0, player.chop - dt);
   for (const t of trees) {
     t.shake = Math.max(0, t.shake - dt * 4);
-    if (t.hp <= 0) { t.fall = Math.min(1, t.fall + dt * 2); continue; }
+    if (t.hp <= 0) { t.fall = Math.min(1, t.fall + dt * 1.4); continue; }
     if (Math.hypot(player.x - t.x, player.y - t.y) < 72) {
       if ((t.hitT -= dt) <= 0) { t.hitT = .13; const dmg = 55 + Math.floor(Math.random() * 40);
         t.hp = Math.max(0, t.hp - dmg); t.shake = 1; player.chop = .13; player.dir = t.x > player.x ? 1 : -1;
-        float(t.x + (Math.random() * 40 - 20), t.y - 110, '-' + dmg, '#ff6b6b', 22); burst(t.x, t.y - 30, '#8d5a2b', 3); beep(180, .05, 'square', .03);
-        if (t.hp === 0) { burst(t.x, t.y - 50, '#4caf50', 20); camShake = .3; S.coins += 20; float(t.x, t.y - 140, 'TIMBER! +20🪙', '#fff', 28); bump('coinPill'); beep(330, .3, 'triangle', .08);
-          if (t.gate && trees.filter(g => g.gate).every(g => g.hp <= 0)) { fields[2].open = fields[3].open = true; float(512, 900, 'New fields opened! 🌾', '#ffe066', 32); beep(880, .4, 'sine', .08); } }
+        float(t.x + (Math.random() * 40 - 20), t.y - 110, '-' + dmg, '#ff6b6b', 22); burstFx = 'fx-wood-chips'; burst(t.x, t.y - 30, '#8d5a2b', 3); beep(180, .05, 'square', .03);
+        if (t.hp === 0) { spawnFx('fx-dust', t.x, t.y + 10); spawnFx('fx-leaf', t.x, t.y - 50); burst(t.x, t.y - 50, '#4caf50', 20); camShake = .3; S.coins += 20; float(t.x, t.y - 140, 'TIMBER! +20🪙', '#fff', 28); bump('coinPill'); beep(330, .3, 'triangle', .08);
+          if (t.gate && trees.filter(g => g.gate).every(g => g.hp <= 0)) { fields[2].open = fields[3].open = true; float(512, 900, 'New fields opened! 🌾', '#ffe066', 32); [fields[2], fields[3]].forEach(f => spawnFx('fx-sparkle', f.x + f.w / 2, f.y + f.h / 2)); beep(880, .4, 'sine', .08); } }
       }
     }
   }
   // customers
   customers.forEach((c, i) => {
-    if (c.leaving) { c.x -= 200 * dt; c.leaving += dt; return; }
+    if (c.leaving) { c.leaving += dt; if (c.leaving > .6) c.x -= 200 * dt; return; }
     c.slot = i; const tx = 512 + i * 60; c.x += (tx - c.x) * Math.min(1, dt * 4);
   });
   customers = customers.filter(c => c.x > -80);
   const queue = customers.filter(c => !c.leaving);
-  while (queue.length < 3) { const c = {x: 1080, want: 4 + Math.floor(Math.random() * 7), got: 0, kind: Math.floor(Math.random() * 3), leaving: 0, y: 300}; customers.push(c); queue.push(c); }
+  while (queue.length < 3) { const c = {x: 1080, want: 4 + Math.floor(Math.random() * 7), got: 0, kind: Math.floor(Math.random() * 4), leaving: 0, y: 300}; customers.push(c); queue.push(c); }
   customers.sort((a, b) => (a.leaving ? -1 : 0) - (b.leaving ? -1 : 0));
   const front = queue[0];
   if (Math.hypot(player.x - stallSpot.x, player.y - stallSpot.y) < 70 && S.wheat > 0 && front && Math.abs(front.x - 512) < 20) {
     if ((S.sellT -= dt) <= 0) { S.sellT = .1; S.wheat--; front.got++; bump('wheatPill'); float(player.x, player.y - 60, '-1🌾', '#fff', 18); beep(520, .04, 'sine', .04);
       if (front.got >= front.want) { const pay = front.want * 5 + 5; S.coins += pay; front.leaving = .01;
-        float(512, 200, '+' + pay + '🪙', '#ffd700', 34); burst(512, 240, '#ffd700', 14); bump('coinPill'); camShake = .15; beep(990, .15, 'triangle', .08); setTimeout(() => beep(1320, .15, 'triangle', .07), 90); } }
+        float(512, 200, '+' + pay + '🪙', '#ffd700', 34); spawnFx('fx-coin-sparkle', 512, 230); burst(512, 240, '#ffd700', 14); player.cheerT = .8; bump('coinPill'); camShake = .15; beep(990, .15, 'triangle', .08); setTimeout(() => beep(1320, .15, 'triangle', .07), 90); } }
   }
   floats.forEach(f => { f.y -= 50 * dt; f.life -= dt * .9; }); floats = floats.filter(f => f.life > 0);
   parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 400 * dt; p.life -= dt; }); parts = parts.filter(p => p.life > 0);
-  camShake = Math.max(0, camShake - dt);
+  camShake = Math.max(0, camShake - dt); player.harvestT = Math.max(0, player.harvestT - dt); player.cheerT = Math.max(0, player.cheerT - dt);
+  fx.forEach(f => f.t += dt); fx = fx.filter(f => f.t < .4);
   // end conditions
   if (S.mode === 'goal' && S.coins >= S.goal) endRound();
   if (S.mode === 'endless' && S.left <= 0) { S.left = 0; endRound(); }
@@ -200,40 +213,66 @@ function update(dt) {
 // ---------- Draw ----------
 function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
 function shadow(x, y, rx) { ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(x, y, rx, rx * .4, 0, 0, 7); ctx.fill(); }
+const isPath = (x, y) => x >= 0 && y >= 0 && x < WW && y < WH && (((x === 448 || x === 512) && y >= 256) || (y === 320 && x >= 64 && x < 960));
+function pathTile(x, y) {
+  const n = !isPath(x, y - TILE), s = !isPath(x, y + TILE), w = !isPath(x - TILE, y), e = !isPath(x + TILE, y);
+  if (n && w) return 'tile-path-corner-outer-nw'; if (n && e) return 'tile-path-corner-outer-ne';
+  if (s && w) return 'tile-path-corner-outer-sw'; if (s && e) return 'tile-path-corner-outer-se';
+  if (n) return 'tile-path-edge-n'; if (s) return 'tile-path-edge-s'; if (w) return 'tile-path-edge-w'; if (e) return 'tile-path-edge-e';
+  return 'tile-dirt-path';
+}
+const decor = [['well', 990, 1250, 96], ['flower-red', 300, 260, 28], ['flower-yellow', 700, 410, 28], ['flower-purple', 960, 420, 28], ['flower-white', 40, 900, 28],
+  ['rock-1', 680, 900, 40], ['rock-2', 40, 400, 40], ['bush-1', 990, 900, 56], ['bush-2', 300, 1380, 56], ['flower-red', 880, 1250, 28]];
 function drawGround() {
-  const onPath = (x, y) => (x === 448 || x === 512) && y >= 256 || y === 320 && x >= 64 && x < 960;
   for (let y = 0; y < WH; y += TILE) for (let x = 0; x < WW; x += TILE) {
-    const p = onPath(x, y);
-    if (tile(p ? 'tile-path' : 'tile-grass', x, y)) continue;
+    const p = isPath(x, y), h = ((x * 7 + y * 13) / TILE) % 5;
+    if (tile(p ? pathTile(x, y) : h === 0 ? 'tile-grass-flowers' : 'tile-grass', x, y)) continue;
     ctx.fillStyle = p ? '#e8c88a' : ((x + y) / TILE) % 2 ? '#86d35a' : '#7bc950'; ctx.fillRect(x, y, TILE, TILE);
   }
-  fields.forEach(f => { ctx.fillStyle = f.open ? '#a0683a' : '#8a6a4a'; rr(f.x, f.y, f.w, f.h, 14); ctx.fill();
-    ctx.strokeStyle = '#7a4a22'; ctx.lineWidth = 4; ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,.12)'; ctx.lineWidth = 2; for (let y = f.y + 18; y < f.y + f.h; y += 30) { ctx.beginPath(); ctx.moveTo(f.x + 8, y + 6); ctx.lineTo(f.x + f.w - 8, y + 6); ctx.stroke(); }
-    if (!f.open) { ctx.fillStyle = '#fff'; ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🔒 Chop the trees!', f.x + f.w / 2, f.y + f.h / 2); } });
-  walls.filter(w => w.hedge).forEach(w => { ctx.fillStyle = '#3e8e3a'; rr(w.x, w.y, w.w, w.h, 20); ctx.fill(); ctx.fillStyle = '#4caf50';
+  fields.forEach(f => {
+    let tiled = has('wheat-plowed');
+    if (tiled) for (let y = f.y; y < f.y + f.h; y += TILE) for (let x = f.x; x < f.x + f.w; x += TILE) tile('wheat-plowed', x, y);
+    else { ctx.fillStyle = f.open ? '#a0683a' : '#8a6a4a'; rr(f.x, f.y, f.w, f.h, 14); ctx.fill(); ctx.strokeStyle = '#7a4a22'; ctx.lineWidth = 4; ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,.12)'; ctx.lineWidth = 2; for (let y = f.y + 18; y < f.y + f.h; y += 30) { ctx.beginPath(); ctx.moveTo(f.x + 8, y + 6); ctx.lineTo(f.x + f.w - 8, y + 6); ctx.stroke(); } }
+    if (!f.open) { ctx.fillStyle = 'rgba(60,40,20,.35)'; ctx.fillRect(f.x, f.y, f.w, f.h); ctx.fillStyle = '#fff'; ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = '#6b4423'; ctx.strokeText('🔒 Chop the trees!', f.x + f.w / 2, f.y + f.h / 2); ctx.fillText('🔒 Chop the trees!', f.x + f.w / 2, f.y + f.h / 2); } });
+  walls.filter(w => w.hedge).forEach(w => {
+    if (has('fence-horizontal')) { for (let x = w.x; x < w.x + w.w; x += TILE) tile('fence-horizontal', x, w.y);
+      for (let x = w.x + 16; x < w.x + w.w; x += 96) art(x % 192 < 96 ? 'bush-1' : 'bush-2', x, w.y + 60, 48, 48, {foot: 0}); return; }
+    ctx.fillStyle = '#3e8e3a'; rr(w.x, w.y, w.w, w.h, 20); ctx.fill(); ctx.fillStyle = '#4caf50';
     for (let x = w.x + 15; x < w.x + w.w; x += 30) { ctx.beginPath(); ctx.arc(x, w.y + 12, 16, 0, 7); ctx.fill(); } });
+  decor.forEach(([id, x, y, sz]) => art(id, x, y, sz, sz, {foot: 0}));
 }
 function drawWheat(p, T) {
   if (!fields[p.f].open) return;
-  if (p.ripe) { if (art('wheat-ripe', p.x, p.y + 8, 30, 40)) return;
+  const S2 = 44;
+  if (p.ripe) { if (art('wheat-ripe-sway', p.x, p.y + 14, S2, S2, {t: T + p.x * .013, foot: 0}) || art('wheat-ripe', p.x, p.y + 14, S2, S2, {foot: 0})) return;
     const sw = Math.sin(T * 2 + p.x * .05) * 2; ctx.strokeStyle = '#c99a1e'; ctx.lineWidth = 2;
     for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(p.x + i * 5, p.y + 8); ctx.lineTo(p.x + i * 6 + sw, p.y - 16); ctx.stroke(); }
     ctx.fillStyle = '#f4c542'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.ellipse(p.x + i * 6 + sw, p.y - 18, 4, 8, i * .3, 0, 7); ctx.fill(); }
-  } else { if (art('wheat-cut', p.x, p.y + 8, 30, 20)) return;
-    const g = Math.max(0, 1 - p.t / 7); ctx.fillStyle = '#6bbf3a'; ctx.fillRect(p.x - 6, p.y + 4 - 10 * g, 3, 4 + 10 * g); ctx.fillRect(p.x + 3, p.y + 4 - 8 * g, 3, 4 + 8 * g); }
+  } else {
+    // regrow stages: stubble -> seed -> sprout -> growing -> ripe
+    const g = 1 - p.t / (p.max || 7), st = g < .2 ? 'wheat-stubble' : g < .4 ? 'wheat-seed' : g < .7 ? 'wheat-sprout' : 'wheat-growing';
+    if (art(st, p.x, p.y + 14, S2, S2, {foot: 0})) return;
+    const gg = Math.max(0, g); ctx.fillStyle = '#6bbf3a'; ctx.fillRect(p.x - 6, p.y + 4 - 10 * gg, 3, 4 + 10 * gg); ctx.fillRect(p.x + 3, p.y + 4 - 8 * gg, 3, 4 + 8 * gg); }
 }
 function drawTree(t) {
+  const id = 'tree-' + t.kind;
   if (t.hp <= 0) {
-    if (t.fall < 1) { ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.fall * 1.5); ctx.globalAlpha = 1 - t.fall; treeShape(0, 0); ctx.restore(); }
-    if (!art('tree-stump', t.x, t.y + 6, 50, 30)) { ctx.fillStyle = '#8d5a2b'; ctx.beginPath(); ctx.ellipse(t.x, t.y, 18, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#d9a66b'; ctx.beginPath(); ctx.ellipse(t.x, t.y - 3, 14, 6, 0, 0, 7); ctx.fill(); }
+    const stump = () => art(id + '-stump', t.x, t.y, 128, 128) || (ctx.fillStyle = '#8d5a2b', ctx.beginPath(), ctx.ellipse(t.x, t.y, 18, 9, 0, 0, 7), ctx.fill(), ctx.fillStyle = '#d9a66b', ctx.beginPath(), ctx.ellipse(t.x, t.y - 3, 14, 6, 0, 0, 7), ctx.fill());
+    stump();
+    if (t.fall < 1) {
+      // Artie: falling frames drawn at 80% scale pivoting at (40,112); last frame trims treetop, so fade during it
+      const fr = Math.min(3, Math.floor(t.fall * 4)), alpha = t.fall > .7 ? 1 - (t.fall - .7) / .3 : 1;
+      if (!art(id + '-falling', t.x, t.y, 128, 128, {frame: fr, alpha})) { ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.fall * 1.5); ctx.globalAlpha = 1 - t.fall; treeShape(0, 0, t.kind); ctx.restore(); }
+    }
     return; }
-  const sx = Math.sin(performance.now() / 25) * 5 * t.shake;
-  shadow(t.x, t.y + 4, 34); treeShape(t.x + sx, t.y);
+  shadow(t.x, t.y + 4, 34);
+  if (!(t.shake > 0 && art(id + '-shake', t.x, t.y, 128, 128, {t: performance.now() / 1000}))) {
+    const sx = has(id) ? 0 : Math.sin(performance.now() / 25) * 5 * t.shake; treeShape(t.x + sx, t.y, t.kind); }
   if (t.hp < t.max) { ctx.fillStyle = '#0008'; rr(t.x - 34, t.y - 150, 68, 24, 12); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.hp, t.x, t.y - 132); }
 }
-function treeShape(x, y) {
-  if (art('tree', x, y + 6, 110, 140)) return;
+function treeShape(x, y, kind = 'round') {
+  if (art('tree-' + kind, x, y, 128, 128)) return;
   ctx.fillStyle = '#8d5a2b'; ctx.fillRect(x - 10, y - 50, 20, 52);
   ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.arc(x, y - 75, 42, 0, 7); ctx.fill();
   ctx.fillStyle = '#43a047'; ctx.beginPath(); ctx.arc(x - 18, y - 90, 28, 0, 7); ctx.arc(x + 20, y - 85, 26, 0, 7); ctx.fill();
@@ -241,14 +280,14 @@ function treeShape(x, y) {
   ctx.fillStyle = '#e53935'; [[-20, -70], [15, -95], [22, -62]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(x + a, y + b, 5, 0, 7); ctx.fill(); });
 }
 function drawBarn() { const x = 60, y = 110;
-  if (art('barn', x + 100, y + 150, 220, 220)) return;
+  if (art('barn', x + 100, y + 150, 210, 210, {foot: 0})) return;
   shadow(x + 100, y + 152, 110); ctx.fillStyle = '#d32f2f'; ctx.fillRect(x, y + 40, 200, 110);
   ctx.fillStyle = '#8e1b1b'; ctx.beginPath(); ctx.moveTo(x - 15, y + 45); ctx.lineTo(x + 100, y - 30); ctx.lineTo(x + 215, y + 45); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.fillRect(x + 70, y + 80, 60, 70); ctx.fillStyle = '#b71c1c'; ctx.fillRect(x + 76, y + 86, 48, 64);
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 76, y + 86); ctx.lineTo(x + 124, y + 150); ctx.moveTo(x + 124, y + 86); ctx.lineTo(x + 76, y + 150); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 100, y + 20, 14, 0, 7); ctx.fill(); }
 function drawStall() { const x = 432, y = 110;
-  if (!art('market-stall', 512, y + 95, 180, 160)) {
+  if (!art('market-stall', 512, y + 100, 180, 180, {foot: 0})) {
     shadow(512, y + 92, 90); ctx.fillStyle = '#a1662f'; ctx.fillRect(x, y + 40, 160, 55); ctx.fillStyle = '#c98b4c'; ctx.fillRect(x - 6, y + 34, 172, 14);
     ctx.fillStyle = '#6b4423'; ctx.fillRect(x + 4, y - 20, 8, 60); ctx.fillRect(x + 148, y - 20, 8, 60);
     for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? '#fff' : '#ff7043'; ctx.beginPath(); ctx.moveTo(x - 10 + i * 22.5, y - 30); ctx.lineTo(x + 12.5 + i * 22.5, y - 30); ctx.lineTo(x + 12.5 + i * 22.5, y - 5); ctx.arc(x + 1.25 + i * 22.5, y - 5, 11.25, 0, 3.14); ctx.fill(); }
@@ -257,21 +296,30 @@ function drawStall() { const x = 432, y = 110;
   ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.setLineDash([8, 6]); ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(stallSpot.x, stallSpot.y, 50, 22, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]);
 }
 const shirt = ['#42a5f5', '#ab47bc', '#ff7043'], hair = ['#5d4037', '#212121', '#ffb300'];
-function drawCustomer(c, T) { const x = c.x, y = c.y, b = Math.abs(Math.sin(T * 8 + c.x)) * 3;
+function drawCustomer(c, T) { const x = c.x, y = c.y, b = Math.abs(Math.sin(T * 8 + c.x)) * 3, id = 'customer-' + (c.kind + 1);
   shadow(x, y + 2, 16);
-  if (!art('customer-' + (c.kind + 1), x, y + 2, 50, 70, T, !!c.leaving)) {
-    ctx.fillStyle = shirt[c.kind]; rr(x - 13, y - 38 - b, 26, 32, 8); ctx.fill();
+  const settled = !c.leaving && Math.abs(c.x - (512 + c.slot * 60)) < 4;
+  const act = c.leaving ? (c.leaving < .6 ? 'happy' : 'walk-left') : settled ? 'waiting' : 'walk-left';
+  if (!art(id, x, y, 84, 84, {t: T, action: act})) { const k = c.kind % 3;
+    ctx.fillStyle = shirt[k]; rr(x - 13, y - 38 - b, 26, 32, 8); ctx.fill();
     ctx.fillStyle = '#ffd7b0'; ctx.beginPath(); ctx.arc(x, y - 50 - b, 13, 0, 7); ctx.fill();
-    ctx.fillStyle = hair[c.kind]; ctx.beginPath(); ctx.arc(x, y - 54 - b, 13, 3.3, 6.1); ctx.fill();
+    ctx.fillStyle = hair[k]; ctx.beginPath(); ctx.arc(x, y - 54 - b, 13, 3.3, 6.1); ctx.fill();
     ctx.fillStyle = '#222'; ctx.fillRect(x - 6, y - 52 - b, 3, 3); ctx.fillRect(x + 3, y - 52 - b, 3, 3);
     ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y - 47 - b, 5, .2, 2.9); ctx.stroke();
     ctx.fillStyle = '#555'; ctx.fillRect(x - 10, y - 8, 8, 10); ctx.fillRect(x + 2, y - 8, 8, 10); }
-  if (c.leaving) { ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('💖😊', x, y - 72 - c.leaving * 20); }
-  else if (c.slot === 0 || Math.abs(c.x - (512 + c.slot * 60)) < 5) { ctx.fillStyle = '#fff'; rr(x - 26, y - 98, 52, 26, 10); ctx.fill(); ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🌾' + (c.want - c.got), x, y - 80); }
+  if (c.leaving) { ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('💖', x, y - 80 - c.leaving * 20); }
+  else if (settled) { ctx.fillStyle = '#fff'; rr(x - 30, y - 104, 60, 28, 12); ctx.fill(); ctx.strokeStyle = '#d9a066'; ctx.lineWidth = 2; ctx.stroke();
+    const ic = art('icon-wheat', x - 14, y - 78, 22, 22, {foot: 0}); ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center'; ctx.fillText((ic ? '' : '🌾') + (c.want - c.got), x + (ic ? 8 : 0), y - 84); }
 }
 function drawPlayer(T) { const {x, y, dir} = player, mv = player.moving || player.chop > 0, b = mv ? Math.abs(Math.sin(player.t * 12)) * 4 : 0, leg = mv ? Math.sin(player.t * 12) * 6 : 0;
   shadow(x, y + 2, 20);
-  if (art(player.chop > 0 ? 'player-chop' : mv ? 'player-walk' : 'player-idle', x, y + 4, 64, 84, player.t, dir < 0) || art('player-walk', x, y + 4, 64, 84, mv ? player.t : 0, dir < 0)) return;
+  if (has('farmer')) {
+    const act = player.chop > 0 || (player.target && !player.moving) ? 'chop' : player.harvestT > 0 && !player.moving ? 'harvest' : player.cheerT > 0 ? 'cheer'
+      : player.moving ? (S.wheat > 0 ? 'carry-' : 'walk-') + player.face : 'idle';
+    const flip = (act === 'chop' || act === 'harvest' || act === 'cheer') && dir < 0;
+    art('farmer', x, y, 100, 100, {t: player.moving ? player.t : T, action: act, flip});
+    if (S.wheat > 0) { ctx.fillStyle = '#fff'; rr(x - 26, y - 116, 52, 24, 10); ctx.fill(); const ic = art('icon-wheat', x - 13, y - 94, 20, 20, {foot: 0}); ctx.fillStyle = '#4a2f14'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(S.wheat, x + 8, y - 99); }
+    return; }
   ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1);
   ctx.fillStyle = '#1e5aa8'; ctx.fillRect(-10 + leg, -14, 8, 14); ctx.fillRect(2 - leg, -14, 8, 14);
   ctx.fillStyle = '#5d4037'; ctx.fillRect(-12 + leg, -2, 11, 5); ctx.fillRect(1 - leg, -2, 11, 5);
@@ -309,6 +357,7 @@ function draw(T) {
   customers.forEach(c => list.push([c.y, () => drawCustomer(c, T)]));
   list.push([300, drawBarn], [235, drawStall], [player.y, () => drawPlayer(T)]);
   list.sort((a, b) => a[0] - b[0]).forEach(i => i[1]());
+  fx.forEach(f => art(f.id, f.x, f.y, 64, 64, {frame: Math.floor(f.t * 10), foot: 0}));
   parts.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / .7); ctx.fillStyle = p.color; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); }); ctx.globalAlpha = 1;
   floats.forEach(f => { ctx.globalAlpha = Math.min(1, f.life * 2); ctx.font = `900 ${f.size}px sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#4a2f14'; ctx.strokeText(f.text, f.x, f.y); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); });
   ctx.globalAlpha = 1;
@@ -358,5 +407,5 @@ $('replayBtn').onclick = () => start(S.mode);
 $('menuBtn').onclick = () => { $('endScreen').classList.add('hidden'); $('startScreen').classList.remove('hidden'); };
 $('quitBtn').onclick = () => endRound();
 refreshBest(); reset('goal'); S.running = false; requestAnimationFrame(loop);
-window.HHF = {get S() { return S; }, get player() { return player; }, get trees() { return trees; }, get fields() { return fields; }, stallSpot}; // for automated tests
+window.HHF = {ART, get fx() { return fx; }, get S() { return S; }, get player() { return player; }, get trees() { return trees; }, get fields() { return fields; }, stallSpot}; // for automated tests
 })();

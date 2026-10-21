@@ -27,16 +27,19 @@ Missing manifest / missing ids / failed images fall back to the canvas art autom
 - An id like `player-walk` is found either as its own file, or as row `action: "walk"` of id `player`.
 - No `rows` = single frame.
 
-## Ids the game uses
-| id | drawn size (world px) | notes |
+## Ids the game uses (Artie batch v1 is in `assets/art/`)
+| what | ids / rows | drawn at (world px) |
 |---|---|---|
-| tile-grass, tile-path | 64×64 | ground tiles |
-| player-idle / player-walk / player-chop (or `player` + rows idle/walk/chop) | 64×84 | farmer in overalls + straw hat |
-| wheat-ripe | 30×40 | crop on a 32px grid inside fields |
-| wheat-cut | 30×20 | stubble while regrowing |
-| tree | 110×140 | also used for the falling animation |
-| tree-stump | 50×30 | |
-| barn | 220×220 | |
-| market-stall | 180×160 | |
-| customer-1, customer-2, customer-3 | 50×70 | may be animated (row 0 used) |
-| coin | — | reserved (coins currently drawn as 🪙 text) |
+| ground | tile-grass, tile-grass-flowers, tile-dirt-path, tile-path-edge-n/e/s/w, tile-path-corner-outer-nw/ne/se/sw (autotiled) | 64×64 |
+| fields | wheat-plowed (soil), wheat-ripe-sway (ripe, falls back to wheat-ripe), regrow: wheat-stubble → wheat-seed → wheat-sprout → wheat-growing | soil 64, crops 44×44 on a 32px grid |
+| farmer | `farmer` rows idle, walk-down/up/left/right, carry-* (while holding wheat), harvest, chop, cheer (after a sale) | 100×100, feet anchor y≈114/128 |
+| customers | customer-1..4 rows walk-left (arrive/leave), waiting (in queue), happy (on paying) | 84×84 |
+| trees | tree-{round,pine,fruit}, -shake (while chopped), -falling (frames 0-3, fades on last frame), -stump | 128×128 |
+| buildings | barn, market-stall | 210, 180 |
+| hedge | fence-horizontal + bush-1/bush-2 | 64 |
+| decor | well, flower-*, rock-1/2, bush-1/2 | various |
+| fx | fx-wheat-bits (harvest), fx-wood-chips (chop), fx-leaf + fx-dust (tree falls), fx-coin-sparkle (sale), fx-sparkle (fields unlock) | 64×64, 0.4s |
+| HUD | icon-wheat, icon-coin (also in bubbles) | 20-24 |
+
+Loader reads Artie's `{assets:[...]}` (or `{files:[...]}`) manifest; uses `file2x` on high-DPI screens; row index from `rows[].row`.
+Unused for now: house, apple, log-pile, coin, coin-stack, price-tag, speech-bubble-*, water tiles, sun/cloud, inventory slots, action buttons.
